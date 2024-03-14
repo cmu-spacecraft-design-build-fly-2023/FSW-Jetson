@@ -1,0 +1,2 @@
+camera:
+  max_startup_time: 10000  # Maximum startup time in milliseconds
