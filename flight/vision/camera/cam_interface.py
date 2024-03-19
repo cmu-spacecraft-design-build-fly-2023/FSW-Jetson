@@ -13,6 +13,10 @@ class Camera:
         os.makedirs(self.image_folder, exist_ok=True)
         self.max_startup_time = config['camera']['max_startup_time'] 
         self.camera_status = self.initialize_camera()
+        self.camera_settings = config['camera']['cameras'].get(str(camera_id), {})
+        self.zoom = self.camera_settings.get('zoom')
+        self.focus = self.camera_settings.get('focus')
+        self.exposure = self.camera_settings.get('exposure')
 
     def load_config(config_path):
         with open(config_path, 'r') as file:
@@ -65,8 +69,11 @@ class Camera:
                 print(f"Image captured from camera {self.camera_id} at {timestamp}")
             else:
                 print(f"Failed to capture image from camera {self.camera_id}")
+                self.camera_status = 0
         else:
             print(f"Camera {self.camera_id} is not operational.")
+        
+        return self.camera_status
 
     def get_latest_image(self):
         image_files = os.listdir(self.image_folder)
@@ -93,3 +100,16 @@ class Camera:
             cv2.destroyAllWindows()
         else:
             print(f"Camera {self.camera_id} is not operational.")
+        return self.camera_status
+    
+    def set_zoom(self):
+        if hasattr(self, 'cap') and self.cap.isOpened():
+            self.cap.set(cv2.CAP_PROP_ZOOM, self.zoom)
+
+    def set_focus(self):
+        if hasattr(self, 'cap') and self.cap.isOpened():
+            self.cap.set(cv2.CAP_PROP_FOCUS, self.focus)
+
+    def set_exposure(self):
+        if hasattr(self, 'cap') and self.cap.isOpened():
+            self.cap.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
