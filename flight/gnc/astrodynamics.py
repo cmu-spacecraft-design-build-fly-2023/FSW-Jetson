@@ -2,6 +2,8 @@ import numpy as np
 import brahe
 
 
+R_EARTH = 6.378e6
+
 def get_CART_from_OSC(x_oe, degrees=False):
     """
     Return the cartesian state (position and velocity, ECI) given the corresponding set of osculating orbital elements.
