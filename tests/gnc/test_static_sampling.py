@@ -76,7 +76,6 @@ if __name__ == "__main__":
         vv[i, :] = Qs[i, :, :] @ ut
     plotter.scatter3D(vv, equal=True)"""
 
-    
     # Initial orbit position guess by using the landmarks
     r0 = sampling.sample_sso_orbit_pos_near_landmark(landmarks)
     #Initial attitude guess by using the camera ID and nadir vector using the initial orbit guess
@@ -86,10 +85,9 @@ if __name__ == "__main__":
     
     q0 = triangulation.nadir_pointing_attitude(camera_body_frames[cam_ID], n0)
     Q0 = dcm_from_q(q0)
- 
 
     # Need to fix - some divergence with Julia version
-    rf, Qf, cost = triangulation.sampling_search(landmarks, measurements, Q0, camera_body_frames[cam_ID], N_samples=100, initial_angular_sampling_step=np.deg2rad(180), decay=0.95, max_iterations=100, verbose=True)
+    rf, Qf, cost = triangulation.sampling_search(landmarks, measurements, Q0, camera_body_frames[cam_ID], N_samples=50, initial_angular_sampling_step=np.deg2rad(10), decay=0.95, max_iterations=100, verbose=True)
 
     print("Estimated orbit position: ", rf)
     print("Estimated attitude: ", Qf)

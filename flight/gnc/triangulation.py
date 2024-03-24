@@ -152,7 +152,7 @@ def sampling_search(landmarks,
         # Triangulate for each sample
         for k in range(N_samples):
             r_samples[k, :], cost_samples[k] = triangulate_orbit_position(landmarks, measurements, Q_samples[k], Als, bls)
-                
+
         # Take the lowest cost attitude
         idx = np.argmin(cost_samples)
         if cost_samples[idx] < curr_cost:

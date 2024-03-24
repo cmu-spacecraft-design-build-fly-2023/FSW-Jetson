@@ -67,28 +67,28 @@ def sample_attitude_hemisphere(direction, ang_step=np.deg2rad(20)):
     Sample N points on the direction hemisphere.
     """
     if np.array_equal(direction, [0, 0, 1]):
-        longitude_range = np.arange(0, np.pi/2, ang_step)
-        latitude_range = np.arange(0, 2*np.pi, ang_step)
+        longitude_range = np.arange(0, np.pi/2 + ang_step, ang_step)
+        latitude_range = np.arange(0, 2*np.pi + ang_step, ang_step)
 
     elif np.array_equal(direction, [0, 0, -1]):
-        longitude_range = np.arange(np.pi/2, np.pi, ang_step)
-        latitude_range = np.arange(0, 2*np.pi, ang_step)
+        longitude_range = np.arange(np.pi/2, np.pi + ang_step, ang_step)
+        latitude_range = np.arange(0, 2*np.pi + ang_step, ang_step)
 
     elif np.array_equal(direction, [1, 0, 0]):
-        longitude_range = np.arange(0, np.pi, ang_step)
-        latitude_range = np.arange(-np.pi/2, np.pi/2, ang_step)
+        longitude_range = np.arange(0, np.pi + ang_step, ang_step)
+        latitude_range = np.arange(-np.pi/2, np.pi/2 + ang_step, ang_step)
 
     elif np.array_equal(direction, [-1, 0, 0]):
-        longitude_range = np.arange(0, np.pi, ang_step)
-        latitude_range = np.arange(np.pi/2, 3*np.pi/2 , ang_step)
+        longitude_range = np.arange(0, np.pi + ang_step, ang_step)
+        latitude_range = np.arange(np.pi/2, 3*np.pi/2 + ang_step , ang_step)
 
     elif np.array_equal(direction, [0, 1, 0]):
-        longitude_range = np.arange(0, np.pi, ang_step)
-        latitude_range = np.arange(0, np.pi, ang_step)
+        longitude_range = np.arange(0, np.pi + ang_step, ang_step)
+        latitude_range = np.arange(0, np.pi + ang_step, ang_step)
         
     elif np.array_equal(direction, [0, -1, 0]):
-        longitude_range = np.arange(0, np.pi , ang_step)
-        latitude_range = np.arange(np.pi, 2*np.pi, ang_step)
+        longitude_range = np.arange(0, np.pi + ang_step , ang_step)
+        latitude_range = np.arange(np.pi, 2*np.pi + ang_step, ang_step)
     
 
     Pt = np.array([0, 0, 1])
