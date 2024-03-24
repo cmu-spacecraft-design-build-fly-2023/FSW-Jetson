@@ -35,7 +35,7 @@ def find_camera_ID(camera_body_frames, gt_attitude_q, landmarks):
     cam_vec_body = [top_x_body, top_y_body, top_z_body, bottom_x_body, bottom_y_body, bottom_z_body] # All unit vectors
 
     # Mean landmark body frame position
-    mean_landmark_body = np.dot(np.transpose(dcm_from_q(gt_attitude_q)), np.mean(landmarks, axis=0))
+    mean_landmark_body = dcm_from_q(gt_attitude_q).T @ np.mean(landmarks, axis=0)
 
     cam_to_ld_dir = np.zeros((6, 3))
     for i in range(6):
@@ -60,15 +60,22 @@ if __name__ == "__main__":
     from time import sleep 
 
     # Load landmarks from CSV file
-    landmarks = np.loadtxt("tests/gnc/data/3_nn/landmarks.csv", delimiter=',')
+    landmarks = np.loadtxt("tests/gnc/data/4/landmarks.csv", delimiter=',')
     # Load measurements from CSV file
-    measurements = np.loadtxt("tests/gnc/data/3_nn/measurements.csv", delimiter=',')
+    measurements = np.loadtxt("tests/gnc/data/4/measurements.csv", delimiter=',')
     # Load ground truth orbit position and attitude quaternion from CSV file
-    gt_data = np.loadtxt("tests/gnc/data/3_nn/gt.csv", delimiter=',', dtype=np.float64)
+    gt_data = np.loadtxt("tests/gnc/data/4/gt.csv", delimiter=',', dtype=np.float64)
     gt_orbit_pos = gt_data[0:3]
     gt_attitude_q = gt_data[3:7]
 
-    
+    """import plotter
+    Qs = sampling.sample_attitude_hemisphere(np.array([0, 0, -1]), ang_step=np.deg2rad(20))
+    ut = np.array([0.0, 0, -1])
+    vv = np.zeros((Qs.shape[0], 3))
+    for i in range(Qs.shape[0]):
+        vv[i, :] = Qs[i, :, :] @ ut
+    plotter.scatter3D(vv, equal=True)"""
+
     
     # Initial orbit position guess by using the landmarks
     r0 = sampling.sample_sso_orbit_pos_near_landmark(landmarks)
@@ -79,9 +86,10 @@ if __name__ == "__main__":
     
     q0 = triangulation.nadir_pointing_attitude(camera_body_frames[cam_ID], n0)
     Q0 = dcm_from_q(q0)
+ 
 
     # Need to fix - some divergence with Julia version
-    rf, Qf, cost = triangulation.sampling_search(landmarks, measurements, Q0, camera_body_frames[cam_ID], N_samples=50, initial_angular_sampling_step=np.deg2rad(20), decay=0.95, max_iterations=100, verbose=True)
+    rf, Qf, cost = triangulation.sampling_search(landmarks, measurements, Q0, camera_body_frames[cam_ID], N_samples=100, initial_angular_sampling_step=np.deg2rad(180), decay=0.95, max_iterations=100, verbose=True)
 
     print("Estimated orbit position: ", rf)
     print("Estimated attitude: ", Qf)
@@ -89,8 +97,9 @@ if __name__ == "__main__":
 
     norm_rf_gt_orbit_pos = np.linalg.norm(rf - gt_orbit_pos)
     print("Norm(rr - gt_orbit_pos):", norm_rf_gt_orbit_pos)
-    gt_attitude_Q = np.dot(dcm_from_q(gt_attitude_q), Qf)
+    gt_attitude_Q = dcm_from_q(gt_attitude_q)
     dR = gt_attitude_Q.T @ Qf
     angle_err = np.rad2deg(np.arccos((np.trace(dR) - 1) / 2))
     print("Angular Error (deg):", angle_err)
+
 

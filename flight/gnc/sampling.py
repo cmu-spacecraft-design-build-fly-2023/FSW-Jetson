@@ -61,51 +61,57 @@ def sample_sso_orbit_pos_near_landmark(landmarks, landmark_cone_angle=np.deg2rad
     return ra
         
 
-def sample_attitude_hemisphere_vectorized(direction, ang_step):
-    """
-    Samples N points on the direction hemisphere.
 
-    Args:
-        direction (np.ndarray): Direction vector.
-        ang_step (float): Angular step size.
-
-    Returns:
-        np.ndarray: Array of rotation matrices.
+def sample_attitude_hemisphere(direction, ang_step=np.deg2rad(20)):
     """
-    # Define longitude and latitude ranges based on direction
+    Sample N points on the direction hemisphere.
+    """
     if np.array_equal(direction, [0, 0, 1]):
-        longitude_range = np.arange(0, np.pi/2 + ang_step, ang_step)
-        latitude_range = np.arange(0, 2*np.pi + ang_step, ang_step)
+        longitude_range = np.arange(0, np.pi/2, ang_step)
+        latitude_range = np.arange(0, 2*np.pi, ang_step)
+
     elif np.array_equal(direction, [0, 0, -1]):
-        longitude_range = np.arange(np.pi/2, np.pi + ang_step, ang_step)
-        latitude_range = np.arange(0, 2*np.pi + ang_step, ang_step)
+        longitude_range = np.arange(np.pi/2, np.pi, ang_step)
+        latitude_range = np.arange(0, 2*np.pi, ang_step)
+
     elif np.array_equal(direction, [1, 0, 0]):
-        longitude_range = np.arange(0, np.pi + ang_step, ang_step)
-        latitude_range = np.arange(-np.pi/2, np.pi/2 + ang_step, ang_step)
+        longitude_range = np.arange(0, np.pi, ang_step)
+        latitude_range = np.arange(-np.pi/2, np.pi/2, ang_step)
+
     elif np.array_equal(direction, [-1, 0, 0]):
-        longitude_range = np.arange(0, np.pi + ang_step, ang_step)
-        latitude_range = np.arange(np.pi/2, 3*np.pi/2 + ang_step, ang_step)
+        longitude_range = np.arange(0, np.pi, ang_step)
+        latitude_range = np.arange(np.pi/2, 3*np.pi/2 , ang_step)
+
     elif np.array_equal(direction, [0, 1, 0]):
-        longitude_range = np.arange(0, np.pi + ang_step, ang_step)
-        latitude_range = np.arange(0, np.pi + ang_step, ang_step)
+        longitude_range = np.arange(0, np.pi, ang_step)
+        latitude_range = np.arange(0, np.pi, ang_step)
+        
     elif np.array_equal(direction, [0, -1, 0]):
-        longitude_range = np.arange(0, np.pi + ang_step, ang_step)
-        latitude_range = np.arange(np.pi, 2*np.pi + ang_step, ang_step)
+        longitude_range = np.arange(0, np.pi , ang_step)
+        latitude_range = np.arange(np.pi, 2*np.pi, ang_step)
     
-    # Generate samples
-    samples = []
+
     Pt = np.array([0, 0, 1])
-    for θ in longitude_range:
-        for ϕ in latitude_range:
-            x = np.sin(θ) * np.cos(ϕ)
-            y = np.sin(θ) * np.sin(ϕ)
-            z = np.cos(θ)
+
+    nb = len(longitude_range) * len(latitude_range)
+    print(len(longitude_range))
+    print(len(latitude_range))
+    Q_samples = np.zeros((nb, 3, 3))
+
+    idx = 0
+    print(nb)
+    for theta in longitude_range:
+        for phi in latitude_range:
+            x = np.sin(theta) * np.cos(phi)
+            y = np.sin(theta) * np.sin(phi)
+            z = np.cos(theta)
             v = np.array([x, y, z])
-            R = to_rotation_matrix(v)
-            if np.dot(direction, np.dot(R, Pt)) >= 0:  # Accept samples in the direction hemisphere
-                samples.append(R)
-    
-    return np.array(samples)
+            Q_samples[idx, :, :] = to_rotation_matrix(v)
+            if np.dot(direction, Q_samples[idx, :, :] @ Pt) < 0:  # reject
+                continue
+            idx += 1
+            
+    return Q_samples[:idx, :, :]
 
 
 def sample_rotation_matrices(P, Q_samples, direction_hemisphere, Q0=np.eye(3)):
@@ -124,9 +130,11 @@ def sample_rotation_matrices(P, Q_samples, direction_hemisphere, Q0=np.eye(3)):
     Δ = np.linalg.cholesky(P)
     Pt = np.array([0, 0, 1])
     for k in range(Q_samples.shape[0]):
-        ϕ = np.dot(Δ, np.random.randn(3))
-        Q_samples[k, :, :] = np.dot(Q0, expm(skew_symmetric(ϕ)))
-        while np.dot(direction_hemisphere, np.dot(Q_samples[k], Pt)) < 0:  # Reject samples outside the direction hemisphere
-            ϕ = np.dot(Δ, np.random.randn(3))
-            Q_samples[k, :, :] = np.dot(Q0, expm(skew_symmetric(ϕ)))
+        ϕ = Δ @ np.random.randn(3)
+        Q_samples[k, :, :] = Q0 @ expm(skew_symmetric(ϕ))
+        while np.dot(direction_hemisphere, Q_samples[k] @ Pt) < 0:  # Reject samples outside the direction hemisphere
+            ϕ = Δ @ np.random.randn(3)
+            Q_samples[k, :, :] = Q0 @ expm(skew_symmetric(ϕ))
+
+    
 
