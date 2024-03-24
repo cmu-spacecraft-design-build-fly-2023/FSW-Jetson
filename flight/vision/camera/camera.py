@@ -1,3 +1,4 @@
+
 from cam_interface import Camera
 
 if __name__ == "__main__":
@@ -5,7 +6,7 @@ if __name__ == "__main__":
     camera_id = 2
     resolution = (1280, 720)  
     
-    camera = Camera(camera_id, resolution)
+    camera = Camera(camera_id)
     
     # Access functions for the specific camera ID
     if camera.camera_status == 1:
