@@ -8,10 +8,9 @@ predicted region IDs, the actual region ID extracted from the filename, and the 
 prediction. Additionally, the script calculates and prints the overall accuracy of the predictions based on the
 matches between predicted and actual region IDs.
 
-Dependencies:
-- PIL (Python Imaging Library): Used for opening and converting images.
-- csv: Required for writing the inference results to a CSV file.
-- os, sys: Needed for directory manipulation and path adjustments.
+Requirement:
+    Set the PYTHONPATH environment variable to include the root of project to make the package flight discoverable.
+    export PYTHONPATH="/path/to/project_root:$PYTHONPATH"
 
 Author: Eddie
 Date: [Creation or Last Update Date]
@@ -21,11 +20,8 @@ import os
 import sys
 import csv
 from PIL import Image
-
-sys.path.append('../flight/vision')
-sys.path.append('../models')
-
-from rc import RegionClassifier
+import yaml
+from flight.vision.rc import RegionClassifier
 
 def run_rc_inference(image_dir):
     """
@@ -38,7 +34,18 @@ def run_rc_inference(image_dir):
         list: A list of tuples, each containing the filename and the predicted regions that were correct.
     """
     output_path = 'inference_output/RC_inference_results.csv' 
-    region_ids = ['53S', '32S', '52S', '54T', '33S', '10T', '11R', '17R', '12R', '16T', '33T', '32T', '10S', '18S', '54S']
+    config_path = "../configuration/inference_config.yml"
+    
+    # Load the configuration file
+    with open(config_path, 'r') as file:
+        config = yaml.safe_load(file)
+    
+    # Extract region_ids from the configuration file
+    region_ids = config.get('region_ids', [])
+    print(region_ids)
+    
+    if not region_ids:
+        raise ValueError("No region IDs found in the configuration file.")
 
     # Initialize the classifier
     classifier = RegionClassifier()
@@ -82,7 +89,7 @@ def run_rc_inference(image_dir):
     return correct_predictions
 
 if __name__ == "__main__":
-    image_dir = 'inference_data/RC_testdata'
+    image_dir = 'data/full_inference/img'
     correct_predictions = run_rc_inference(image_dir)
 
     for filename, regions in correct_predictions:

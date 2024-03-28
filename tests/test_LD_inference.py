@@ -6,6 +6,10 @@ against provided image labels, and optionally visualizes the results by drawing 
 and ground truth landmarks. It calculates pixel-wise errors between detected landmarks and ground truth coordinates, 
 supporting both pixel and geographical coordinates.
 
+Requirement:
+    Set the PYTHONPATH environment variable to include the root of project to make the package flight discoverable.
+    export PYTHONPATH="/path/to/project_root:$PYTHONPATH"
+
 Usage:
     Execute the script from the command line, specifying the region ID and whether to draw bounding boxes:
     
@@ -32,12 +36,7 @@ import argparse
 import os
 from os.path import isfile, join
 from PIL import Image, ImageDraw
-
-# Add the directory containing lc_net.py to the Python path
-sys.path.append('../flight/vision/')
-sys.path.append('../models')
-
-from ld import LandmarkDetector
+from flight.vision.ld import LandmarkDetector
 
 def print_detected_landmarks(detection_results):
     """
