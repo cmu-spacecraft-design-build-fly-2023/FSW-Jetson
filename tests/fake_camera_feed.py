@@ -1,4 +1,11 @@
-# fake_camera_feed.py
+"""
+Fake Camera Feed Generator
+
+This module defines the FakeCameraFeed class for simulating camera feeds in machine learning and computer vision testing environments. It allows for the generation of virtual frames with specified dimensions and colors, facilitating the testing of image processing pipelines without the need for real camera hardware. Frames can be individually customized or produced in a sequence with controlled variations.
+
+Author: Eddie
+Date: [Creation or Last Update Date]
+"""
 
 import cv2
 import numpy as np
