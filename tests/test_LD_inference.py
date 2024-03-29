@@ -243,7 +243,7 @@ def run_ld_inference_test(region_id, draw_boxes_flag=False, data_path=None):
             # Detect landmarks
             print("----------")
             print(f"Running LD inference for {image_file}:")
-            centroid_xy, corner_xy, centroid_latlons, corner_latlons, landmark_classes = detector.detect_landmarks(img)
+            centroid_xy, corner_xy, centroid_latlons, corner_latlons, landmark_classes = detector.detect_landmarks_t(img)
 
             detection_results = {
                 'centroid_xy': centroid_xy,
@@ -293,7 +293,7 @@ def run_ld_inference(image_path, region_id, label_path, draw_boxes_flag=False, o
 
         print("----------")
         print(f"Running {region_id} LD inference for {os.path.basename(image_path)}:")
-        centroid_xy, corner_xy, centroid_latlons, corner_latlons, landmark_classes = detector.detect_landmarks(img)
+        centroid_xy, corner_xy, centroid_latlons, corner_latlons, landmark_classes = detector.detect_landmarks_t(img)
 
         # Check if all results are None
         if centroid_xy is None and corner_xy is None and centroid_latlons is None and corner_latlons is None and landmark_classes is None:

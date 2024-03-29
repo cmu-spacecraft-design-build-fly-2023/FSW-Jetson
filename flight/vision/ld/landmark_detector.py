@@ -92,7 +92,7 @@ class LandmarkDetector:
             centroids.append([centroid_lon, centroid_lat])
         return np.array(centroids), np.array(corners)
 
-    def detect_landmarks(self, img):
+    def detect_landmarks_t(self, img):
         """
         Detects landmarks in an input image using a pretrained YOLO model and extracts relevant information.
 
@@ -152,3 +152,65 @@ class LandmarkDetector:
         centroid_latlons, corner_latlons = self.get_latlons(landmark_class)
 
         return centroid_xy, corner_xy, centroid_latlons, corner_latlons, landmark_class
+
+
+    def detect_landmarks(self, img):
+        """
+        Detects landmarks in an input image using a pretrained YOLO model and extracts relevant information.
+
+        Args:
+            img (np.ndarray): The input image array on which to perform landmark detection.
+
+        Returns:
+            tuple: A tuple containing several numpy arrays:
+                - centroid_xy (np.ndarray): Array of [x, y] coordinates for the centroids of detected landmarks.
+                - corner_xy (np.ndarray): Array of bounding box corner coordinates in the format [top-left-x, top-left-y, bottom-right-x, bottom-right-y].
+                - centroid_latlons (np.ndarray): Array of geographical coordinates [latitude, longitude] for each detected landmark's centroid, based on class ID.
+                - corner_latlons (np.ndarray): Array of geographical coordinates for the corners of bounding boxes, similar to centroid_latlons but for box corners.
+                - landmark_class (np.ndarray): Array of class IDs for each detected landmark.
+        
+        The detection process filters out landmarks with low confidence scores (below 0.5) and invalid bounding box dimensions. It aims to provide a comprehensive set of data for each detected landmark, facilitating further analysis or processing.
+        """
+        # Detect landmarks using the YOLO model
+        results = self.model(img)
+        landmark_list = []
+        
+        # Process each detection result from the model
+        for result in results:
+            landmarks = result.boxes
+
+            if landmarks:# Sanity Check
+                # Iterate over each detected bounding box (landmark)
+                for landmark in landmarks:
+                    x, y, w, h = landmark.xywh[0]
+                    cls = landmark.cls[0].item()
+                    conf = landmark.conf[0].item()
+
+                    # Validate bounding box dimensions (e.g., non-negative)
+                    if w < 0 or h < 0:
+                        print("Invalid bounding box dimensions detected.")
+                        continue
+
+                    # Validate confidence level (e.g., consider only high confidence detections)
+                    if conf < 0.5:  # Assuming 0.5 as a threshold for confidence
+                        print("Skipping low confidence landmark.")
+                        continue
+
+                    landmark_list.append([int(x.item()), int(y.item()), cls, int(w.item()), int(h.item())])
+            else:
+                return None, None, None
+
+        landmark_arr = np.array(landmark_list)
+
+        # Extract centroid coordinates, class IDs, and dimensions (width and height)
+        centroid_xy = landmark_arr[:, :2]  # Centroid coordinates [x, y]
+        landmark_class = landmark_arr[:, 2].astype(int)  # Class IDs as integers
+        landmark_wh = landmark_arr[:, 3:5]  # Width and height [w, h]
+
+        # Calculate the top-left and bottom-right coordinates of the bounding boxes
+        corner_xy = self.calculate_bounding_boxes(centroid_xy, landmark_wh)
+
+        # Get bounding box lat/lon based on ground truth 
+        centroid_latlons, corner_latlons = self.get_latlons(landmark_class)
+
+        return centroid_xy, centroid_latlons, landmark_class
