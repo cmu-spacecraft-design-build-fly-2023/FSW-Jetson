@@ -22,12 +22,12 @@ import os
 import sys
 import csv
 
-model_path = "/home/riverflame/Spacecraft/FSW-Jetson/models/ld"
+
 LD_MODEL_SUF = '_nadir.pt'
 
 class LandmarkDetector:
 
-    def __init__(self, region_id, model_path=model_path):
+    def __init__(self, region_id, model_path='models/ld'):
         """
         Initialize the LandmarkDetector with a specific region ID and model path
         The YOLO object is created with the path to a specific pretrained model

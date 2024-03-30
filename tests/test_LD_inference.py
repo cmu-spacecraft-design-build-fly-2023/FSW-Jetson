@@ -6,10 +6,6 @@ against provided image labels, and optionally visualizes the results by drawing 
 and ground truth landmarks. It calculates pixel-wise errors between detected landmarks and ground truth coordinates, 
 supporting both pixel and geographical coordinates.
 
-Requirement:
-    Set the PYTHONPATH environment variable to include the root of project to make the package flight discoverable.
-    export PYTHONPATH="/path/to/project_root:$PYTHONPATH"
-
 Usage:
     Execute the script from the command line, specifying the region ID and whether to draw bounding boxes:
     
@@ -211,7 +207,7 @@ def run_ld_inference_test(region_id, draw_boxes_flag=False, data_path=None):
         data_path = 'inference_data/LD_testdata' + region_id + '_top_salient'
     images_dir = data_path + "/img/"
     label_dir = data_path + "/label/"
-    output_dir = 'inference_output/'
+    output_dir = 'tests/inference_output/'
     os.makedirs(output_dir, exist_ok=True)  # Ensure the output directory exists
 
     # Get a list of image files in the directory

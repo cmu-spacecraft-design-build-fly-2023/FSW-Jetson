@@ -73,8 +73,8 @@ class InferenceRunner:
 
 if __name__ == "__main__":
     # Specify directories for images and labels
-    image_dir = 'data/full_inference/img'
-    label_dir = 'data/full_inference/label'
+    image_dir = 'tests/data/full_inference/img'
+    label_dir = 'tests/data/full_inference/label'
 
     # Initialize the InferenceRunner
     detector = InferenceRunner(image_dir, label_dir)

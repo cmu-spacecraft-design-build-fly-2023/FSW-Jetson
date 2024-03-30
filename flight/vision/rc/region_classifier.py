@@ -7,11 +7,6 @@ final layer to match the number of target classes and loading custom model weigh
 include image preprocessing and the execution of classification, providing class probabilities for each 
 recognized region.
 
-Requirement:
-    Set the PYTHONPATH environment variable to include the root of project to make the package flight discoverable.
-    export PYTHONPATH="/path/to/project_root:$PYTHONPATH"
-
-    export SPACECRAFT_ROOT="/path/to/project_root"
 
 Author: Eddie
 Date: [Creation or Last Update Date]
@@ -61,9 +56,8 @@ class RegionClassifier:
         self.region_ids = self.load_region_ids(config_path)
 
     def construct_paths(self):
-        spacecraft_root = os.getenv('SPACECRAFT_ROOT')
-        model_path = os.path.join(spacecraft_root, 'models/rc')
-        config_path = os.path.join(spacecraft_root, 'configuration/inference_config.yml')
+        model_path = os.path.join('models/rc')
+        config_path = os.path.join('configuration/inference_config.yml')
         return model_path, config_path
 
     def load_region_ids(self, config_path):

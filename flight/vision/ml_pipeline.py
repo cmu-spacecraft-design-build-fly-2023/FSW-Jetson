@@ -6,13 +6,6 @@ performs region classification to identify geographic regions within the frames,
 detects landmarks within those regions. The script is designed to handle varying lighting conditions 
 by discarding frames that are deemed too dark for reliable classification or detection.
 
-Requirements:
-    Set the PYTHONPATH environment variable to include the root of the project to make the packages flight discoverable.
-    export PYTHONPATH="/path/to/project_root:$PYTHONPATH"
-
-    This is intended to construct path for loading inference configuration file:
-    export SPACECRAFT_ROOT="/path/to/project_root"
-
 Author: Eddie
 Date: [Creation or Last Update Date]
 """
@@ -23,7 +16,6 @@ import cv2
 import numpy as np
 from flight.vision.rc import RegionClassifier
 from flight.vision.ld import LandmarkDetector
-from tests.fake_camera_feed import FakeCameraFeed
 
 class MLPipeline:
     """
