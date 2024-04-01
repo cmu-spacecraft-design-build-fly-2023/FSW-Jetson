@@ -17,15 +17,18 @@ class CameraErrorCodes:
     READ_FRAME_ERROR = 1004
     CAMERA_NOT_OPERATIONAL = 1005
     CONFIGURATION_ERROR = 1006
+    SUN_BLIND = 1007
 
 error_messages = {
     CameraErrorCodes.CAMERA_INITIALIZATION_FAILED: "Camera initialization failed.",
     CameraErrorCodes.CAPTURE_FAILED: "Failed to capture image.",
     CameraErrorCodes.NO_IMAGES_FOUND: "No images found.",
     CameraErrorCodes.READ_FRAME_ERROR: "Error reading frame.",
+    CameraErrorCodes.SUN_BLIND: "Image blinded by the sun",
     CameraErrorCodes.CAMERA_NOT_OPERATIONAL: "Camera is not operational.",
     CameraErrorCodes.CONFIGURATION_ERROR: "Configuration error."
 }
+
 
 
 class Camera:
@@ -37,23 +40,24 @@ class Camera:
             raise ValueError(error_messages[CameraErrorCodes.CONFIGURATION_ERROR])
             
         self.camera_id = camera_id
+        self.image_folder = f"captured_images/camera_{camera_id}"
         os.makedirs(self.image_folder, exist_ok=True)
         self.max_startup_time = config['camera']['max_startup_time'] 
-        self.camera_status = self.initialize_camera()
-        self.camera_settings = config['camera']['cameras'].get(str(camera_id), {})
-        self.resolution = (self.camera_settings['resolution']['width'], self.camera_settings['resolution']['height'])       
-        self.image_folder = f"captured_images/camera_{camera_id}"
+        self.camera_settings = config['camera']['cameras'].get(camera_id, {})
+        self.resolution = (self.camera_settings['resolution']['width'], self.camera_settings['resolution']['height'])     
         self.zoom = self.camera_settings.get('zoom')
         self.focus = self.camera_settings.get('focus')
         self.exposure = self.camera_settings.get('exposure')
+        self.camera_status = self.initialize_camera()
 
-    def load_config(config_path):
+    def load_config(self,config_path):
         with open(config_path, 'r') as file:
             return yaml.safe_load(file)
 
     def log_error(self, error_code):
         message = error_messages.get(error_code, "Unknown error.")
         logging.error(f"Camera {self.camera_id}: {message}")
+
 
     def initialize_camera(self):
         start_time = time.time()
@@ -72,11 +76,12 @@ class Camera:
             return 0
 
     def check_operational_status(self):
-        if hasattr(self, 'cap') and self.cap.isOpened():
-            ret, frame = self.cap.read()
-            if not ret:
-                self.cap.release()
-                self.camera_status = 0
+        # if hasattr(self, 'cap') and self.cap.isOpened():
+        #     ret, frame = self.cap.read()
+        #     print("inside this")
+        #     if not ret:
+        #         self.cap.release()
+        #         self.camera_status = 0
 
         if not hasattr(self, 'cap') or not self.cap.isOpened():
             self.cap = cv2.VideoCapture(self.camera_id)
@@ -88,24 +93,31 @@ class Camera:
             else:
                 self.camera_status = 0
                 return self.camera_status
-        
+    
         return self.camera_status  
     
     
     def capture_image(self):
         if self.check_operational_status():
-            cap = cv2.VideoCapture(self.camera_id)
-            ret, frame = cap.read()
-            if ret:
-                timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-                image_name = f"{self.image_folder}/{timestamp}.jpg"
-                cv2.imwrite(image_name, frame)
-                print(f"Image captured from camera {self.camera_id} at {timestamp}")
-            else:
-                print(f"Failed to capture image from camera {self.camera_id}")
-                self.log_error(CameraErrorCodes.READ_FRAME_ERROR)
-                self.log_error(CameraErrorCodes.CAPTURE_FAILED)
-                self.camera_status = 0
+            # cap = cv2.VideoCapture(self.camera_id)
+            try:
+                ret, frame = self.cap.read()
+                if ret:
+                    if not self.is_blinded_by_sun(frame):
+                        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+                        image_name = f"{self.image_folder}/{timestamp}.jpg"
+                        cv2.imwrite(image_name, frame)
+                        print(f"Image captured from camera {self.camera_id} at {timestamp}")
+                    else:
+                        print(f"blinded by the lights")
+                        self.log_error(CameraErrorCodes.SUN_BLIND)
+                else:
+                    print(f"Failed to capture image from camera {self.camera_id}")
+                    self.log_error(CameraErrorCodes.READ_FRAME_ERROR)
+                    self.log_error(CameraErrorCodes.CAPTURE_FAILED)
+                    self.camera_status = 0
+            finally:
+                self.cap.release()
         else:
             print(f"Camera {self.camera_id} is not operational.")
             self.log_error(CameraErrorCodes.CAMERA_NOT_OPERATIONAL)
@@ -124,9 +136,9 @@ class Camera:
     def get_live_feed(self):
         if self.check_operational_status():
             cv2.namedWindow(f"Live Feed from Camera {self.camera_id}")
-            cap = cv2.VideoCapture(self.camera_id)
-            while cap.isOpened():
-                ret, frame = cap.read()
+            # cap = cv2.VideoCapture(self.camera_id)
+            while self.cap.isOpened():
+                ret, frame = self.cap.read()
                 if ret:
                     cv2.imshow(f"Live Feed from Camera {self.camera_id}", frame)
                 else:
@@ -136,7 +148,7 @@ class Camera:
                     break
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
-            cap.release()
+            self.cap.release()
             cv2.destroyAllWindows()
         else:
             print(f"Camera {self.camera_id} is not operational.")
@@ -154,6 +166,19 @@ class Camera:
     def set_exposure(self):
         if hasattr(self, 'cap') and self.cap.isOpened():
             self.cap.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
+    
+    def is_blinded_by_sun(self, image):
+
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        _, thresholded = cv2.threshold(gray, 250, 255, cv2.THRESH_BINARY)
+        
+        # Calculate the percentage of bright pixels
+        bright_pixels = cv2.countNonZero(thresholded)
+        total_pixels = image.shape[0] * image.shape[1]
+        bright_ratio = bright_pixels / total_pixels
+        if bright_ratio > 0.5:  
+            return True 
+        return False
 
 
 class CameraManager:
