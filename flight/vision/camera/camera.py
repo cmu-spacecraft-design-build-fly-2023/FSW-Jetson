@@ -5,6 +5,7 @@ import time
 from datetime import datetime
 import logging
 from typing import List
+import numpy as np
 
 
 logging.basicConfig(filename='camera_errors.log', level=logging.ERROR,
@@ -29,6 +30,11 @@ error_messages = {
     CameraErrorCodes.CONFIGURATION_ERROR: "Configuration error."
 }
 
+class ImageData:
+    def __init__(self, camera_id, frame, timestamp):
+        self.camera_id = camera_id
+        self.frame = frame
+        self.timestamp = timestamp
 
 
 class Camera:
@@ -49,6 +55,7 @@ class Camera:
         self.focus = self.camera_settings.get('focus')
         self.exposure = self.camera_settings.get('exposure')
         self.camera_status = self.initialize_camera()
+        self.image_data = [] # store camera frame  
 
     def load_config(self,config_path):
         with open(config_path, 'r') as file:
@@ -104,10 +111,11 @@ class Camera:
                 ret, frame = self.cap.read()
                 if ret:
                     if not self.is_blinded_by_sun(frame):
-                        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-                        image_name = f"{self.image_folder}/{timestamp}.jpg"
-                        cv2.imwrite(image_name, frame)
+                        timestamp = datetime.now()
+                        # image_name = f"{self.image_folder}/{timestamp}.jpg"
+                        # cv2.imwrite(image_name, frame)
                         print(f"Image captured from camera {self.camera_id} at {timestamp}")
+                        self.image_data.append(ImageData(self.camera_id,frame,timestamp))
                     else:
                         print(f"blinded by the lights")
                         self.log_error(CameraErrorCodes.SUN_BLIND)
@@ -185,6 +193,8 @@ class CameraManager:
 
     def __init__(self, camera_ids):
         self.cameras = {camera_id: Camera(camera_id) for camera_id in camera_ids}
+        number_of_cameras = 6
+        self.camera_frames = np.zeros([number_of_cameras,3])
 
     def capture_images(self):
         """
@@ -223,11 +233,11 @@ class CameraManager:
         for camera_id, camera in self.cameras.items():
             image_folder = camera.image_folder
             try:
-                image_files = [os.path.join(image_folder, filename) for filename in os.listdir(image_folder)]
-                sorted_image_files = sorted(image_files, key=os.path.getctime)
-                camera_frames[camera_id] = sorted_image_files
-            except FileNotFoundError:
-                print(f"No folder found for camera {camera_id}, or no images are present.")
+                # image_files = [os.path.join(image_folder, filename) for filename in os.listdir(image_folder)]
+                # sorted_image_files = sorted(image_files, key=os.path.getctime)
+                camera_frames[camera_id] = camera.image_data
+            except:
+                print(f"No frames found for camera {camera_id}, or no images are present.")
                 camera.log_error(CameraErrorCodes.NO_IMAGES_FOUND)
                 camera_frames[camera_id] = []  # No images found for this camera
         return camera_frames
@@ -254,5 +264,9 @@ manager = CameraManager(camera_ids)
 
 # Capture images from all cameras
 manager.capture_images()
+# manager.capture_images()
 all = manager.get_available_frames()
-print(all[0])
+# imgdata = all[0][0]
+# cv2.imshow(f"Camera {imgdata.camera_id} Frame at {imgdata.timestamp.strftime('%Y-%m-%d %H:%M:%S')}", imgdata.frame)
+# cv2.waitKey(0) 
+# cv2.destroyAllWindows()
