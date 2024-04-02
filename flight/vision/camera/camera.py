@@ -183,22 +183,76 @@ class Camera:
 
 class CameraManager:
 
-    def __init__(self):
-        pass
+    def __init__(self, camera_ids):
+        self.cameras = {camera_id: Camera(camera_id) for camera_id in camera_ids}
+
+    def capture_images(self):
+        """
+       capture stores images for all cameras given in the list
+        """
+        for camera_id, camera in self.cameras.items():
+            camera.capture_image()
+    
+    def turn_on_cameras(self):
+        """
+       re-initialises cameras
+       Returns:
+            Bool status list of camera  
+        """
+        status_list = []
+        for camera_id, camera in self.cameras.items():
+            status = camera.initialize_camera()
+            status_list.append(status == 1)
+        return status_list
+
+    def get_camera(self, camera_id: int) -> Camera:
+        """
+       takes in camera ID 
+       Returns:
+           camera object of specified ID  
+        """
+        return self.cameras.get(camera_id)   
 
     def get_available_frames(self):
-        pass
+        """
+        Get all available image frames for each camera.
+        Returns:
+            A dictionary with camera IDs as keys and lists of image paths as values.
+        """
+        camera_frames = {}
+        for camera_id, camera in self.cameras.items():
+            image_folder = camera.image_folder
+            try:
+                image_files = [os.path.join(image_folder, filename) for filename in os.listdir(image_folder)]
+                sorted_image_files = sorted(image_files, key=os.path.getctime)
+                camera_frames[camera_id] = sorted_image_files
+            except FileNotFoundError:
+                print(f"No folder found for camera {camera_id}, or no images are present.")
+                camera.log_error(CameraErrorCodes.NO_IMAGES_FOUND)
+                camera_frames[camera_id] = []  # No images found for this camera
+        return camera_frames
     
-    def return_status(self):
-        pass
+    # def return_status(self):
+    #     pass
+
+    def turn_off_cameras(self,camera_ids: List[int]):
+        """
+       Release cameras of given IDs 
+        """
+        for camera_id in camera_ids:
+            camera = self.cameras.get(camera_id)
+            if camera is not None and hasattr(camera, 'cap') and camera.cap.isOpened():
+                camera.cap.release()
+                print(f"Camera {camera_id} turned off.")
 
 
-    def turn_on_cameras(self) -> List[bool]:
-        pass
 
-    def turn_off_cameras(self) -> List[bool]:
-        pass
 
-    # Debuf and FDIR
-    def get_camera(self, camera_id: int) -> Camera:
-        pass
+# Example
+camera_ids = [0] 
+manager = CameraManager(camera_ids)
+
+# Capture images from all cameras
+manager.capture_images()
+all = manager.get_available_frames()
+print(all[0])
