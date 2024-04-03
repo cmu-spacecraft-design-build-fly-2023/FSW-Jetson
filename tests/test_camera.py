@@ -1,17 +1,25 @@
 
-from flight.vision.camera import Camera
+import flight.vision.camera as camera
+import time 
+
 
 if __name__ == "__main__":
-    # Specify the camera ID and resolution
-    camera_id = 2
-    resolution = (1280, 720)  
-    
-    camera = Camera(camera_id)
-    
-    # Access functions for the specific camera ID
-    if camera.camera_status == 1:
-        camera.capture_image()  
-        # camera.get_latest_image()  
-        # camera.get_live_feed()  
-    else:
-        print(f"Camera {camera_id} is not available.")
+
+    camera_ids = [0] 
+    manager = camera.CameraManager(camera_ids)
+    manager.turn_on_cameras()
+
+    for i in range(5):
+        print(f"Capturing image {i}")
+        manager.capture_images()
+        frames = manager.get_available_frames()
+        print(frames)
+        manager.show(frames[0])
+        time.sleep(1)
+
+
+    manager.turn_off_cameras(camera_ids)
+
+
+
+

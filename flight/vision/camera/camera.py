@@ -30,32 +30,34 @@ error_messages = {
     CameraErrorCodes.CONFIGURATION_ERROR: "Configuration error."
 }
 
-class ImageData:
-    def __init__(self, camera_id, frame, timestamp):
+class Frame:
+    def __init__(self, frame, camera_id, timestamp):
         self.camera_id = camera_id
         self.frame = frame
         self.timestamp = timestamp
 
+    def save(self):
+        pass
 
 class Camera:
-    def __init__(self, camera_id):
+    def __init__(self, camera_id, config_path):
         try:
-            config = self.load_config('../../../configuration/camera_configuration.yml')
+            config = self.load_config(config_path)
         except Exception as e:
             logging.error(f"{error_messages[CameraErrorCodes.CONFIGURATION_ERROR]}: {e}")
             raise ValueError(error_messages[CameraErrorCodes.CONFIGURATION_ERROR])
-            
+
         self.camera_id = camera_id
         self.image_folder = f"captured_images/camera_{camera_id}"
         os.makedirs(self.image_folder, exist_ok=True)
-        self.max_startup_time = config['camera']['max_startup_time'] 
-        self.camera_settings = config['camera']['cameras'].get(camera_id, {})
+        self.max_startup_time = config['max_startup_time'] 
+        self.camera_settings = config['cameras'].get(camera_id, {})
         self.resolution = (self.camera_settings['resolution']['width'], self.camera_settings['resolution']['height'])     
         self.zoom = self.camera_settings.get('zoom')
         self.focus = self.camera_settings.get('focus')
         self.exposure = self.camera_settings.get('exposure')
         self.camera_status = self.initialize_camera()
-        self.image_data = [] # store camera frame  
+        self._current_frame = None
 
     def load_config(self,config_path):
         with open(config_path, 'r') as file:
@@ -83,13 +85,6 @@ class Camera:
             return 0
 
     def check_operational_status(self):
-        # if hasattr(self, 'cap') and self.cap.isOpened():
-        #     ret, frame = self.cap.read()
-        #     print("inside this")
-        #     if not ret:
-        #         self.cap.release()
-        #         self.camera_status = 0
-
         if not hasattr(self, 'cap') or not self.cap.isOpened():
             self.cap = cv2.VideoCapture(self.camera_id)
             if self.cap.isOpened():
@@ -100,7 +95,6 @@ class Camera:
             else:
                 self.camera_status = 0
                 return self.camera_status
-    
         return self.camera_status  
     
     
@@ -112,10 +106,8 @@ class Camera:
                 if ret:
                     if not self.is_blinded_by_sun(frame):
                         timestamp = datetime.now()
-                        # image_name = f"{self.image_folder}/{timestamp}.jpg"
-                        # cv2.imwrite(image_name, frame)
                         print(f"Image captured from camera {self.camera_id} at {timestamp}")
-                        self.image_data.append(ImageData(self.camera_id,frame,timestamp))
+                        self.current_frame = Frame(frame,self.camera_id,timestamp)
                     else:
                         print(f"blinded by the lights")
                         self.log_error(CameraErrorCodes.SUN_BLIND)
@@ -129,10 +121,18 @@ class Camera:
         else:
             print(f"Camera {self.camera_id} is not operational.")
             self.log_error(CameraErrorCodes.CAMERA_NOT_OPERATIONAL)
-        
         return self.camera_status
 
-    def get_latest_image(self):
+    @property
+    def current_frame(self):
+        return self._current_frame
+    
+    @current_frame.setter
+    def current_frame(self, value):
+        self._current_frame = value
+
+
+    def read_image_from_path(self):
         image_files = os.listdir(self.image_folder)
         if not image_files:
             print(f"No images found for camera {self.camera_id}")
@@ -141,6 +141,31 @@ class Camera:
         latest_image_path = max([os.path.join(self.image_folder, filename) for filename in image_files], key=os.path.getctime)
         return cv2.imread(latest_image_path)
 
+    def set_zoom(self):
+        if hasattr(self, 'cap') and self.cap.isOpened():
+            self.cap.set(cv2.CAP_PROP_ZOOM, self.zoom)
+
+    def set_focus(self):
+        if hasattr(self, 'cap') and self.cap.isOpened():
+            self.cap.set(cv2.CAP_PROP_FOCUS, self.focus)
+
+    def set_exposure(self):
+        if hasattr(self, 'cap') and self.cap.isOpened():
+            self.cap.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
+    
+    def is_blinded_by_sun(self, image):
+        """gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        _, thresholded = cv2.threshold(gray, 250, 255, cv2.THRESH_BINARY)
+        # Calculate the percentage of bright pixels
+        bright_pixels = cv2.countNonZero(thresholded)
+        total_pixels = image.shape[0] * image.shape[1]
+        bright_ratio = bright_pixels / total_pixels
+        if bright_ratio > 0.5:  
+            return True """
+        return False
+    
+
+    # DEBUG only 
     def get_live_feed(self):
         if self.check_operational_status():
             cv2.namedWindow(f"Live Feed from Camera {self.camera_id}")
@@ -163,50 +188,27 @@ class Camera:
             self.log_error(CameraErrorCodes.CAMERA_NOT_OPERATIONAL)
         return self.camera_status
     
-    def set_zoom(self):
-        if hasattr(self, 'cap') and self.cap.isOpened():
-            self.cap.set(cv2.CAP_PROP_ZOOM, self.zoom)
 
-    def set_focus(self):
-        if hasattr(self, 'cap') and self.cap.isOpened():
-            self.cap.set(cv2.CAP_PROP_FOCUS, self.focus)
-
-    def set_exposure(self):
-        if hasattr(self, 'cap') and self.cap.isOpened():
-            self.cap.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
-    
-    def is_blinded_by_sun(self, image):
-
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        _, thresholded = cv2.threshold(gray, 250, 255, cv2.THRESH_BINARY)
-        
-        # Calculate the percentage of bright pixels
-        bright_pixels = cv2.countNonZero(thresholded)
-        total_pixels = image.shape[0] * image.shape[1]
-        bright_ratio = bright_pixels / total_pixels
-        if bright_ratio > 0.5:  
-            return True 
-        return False
 
 
 class CameraManager:
 
-    def __init__(self, camera_ids):
-        self.cameras = {camera_id: Camera(camera_id) for camera_id in camera_ids}
-        number_of_cameras = 6
-        self.camera_frames = np.zeros([number_of_cameras,3])
+    def __init__(self, camera_ids, config_path="configuration/camera_configuration.yml"):
+        self.cameras = {camera_id: Camera(camera_id, config_path=config_path) for camera_id in camera_ids}
+        number_of_cameras = len(self.cameras)
+        self.camera_frames = []
 
     def capture_images(self):
         """
-       capture stores images for all cameras given in the list
+        capture stores images for all cameras given in the list
         """
         for camera_id, camera in self.cameras.items():
             camera.capture_image()
     
     def turn_on_cameras(self):
         """
-       re-initialises cameras
-       Returns:
+        re-initialises cameras
+        Returns:
             Bool status list of camera  
         """
         status_list = []
@@ -214,6 +216,17 @@ class CameraManager:
             status = camera.initialize_camera()
             status_list.append(status == 1)
         return status_list
+
+
+    def turn_off_cameras(self,camera_ids: List[int]):
+        """
+       Release cameras of given IDs 
+        """
+        for camera_id in camera_ids:
+            camera = self.cameras.get(camera_id)
+            if camera is not None and hasattr(camera, 'cap') and camera.cap.isOpened():
+                camera.cap.release()
+                print(f"Camera {camera_id} turned off.")
 
     def get_camera(self, camera_id: int) -> Camera:
         """
@@ -229,44 +242,25 @@ class CameraManager:
         Returns:
             A dictionary with camera IDs as keys and lists of image paths as values.
         """
-        camera_frames = {}
+        camera_frames = []
         for camera_id, camera in self.cameras.items():
-            image_folder = camera.image_folder
             try:
-                # image_files = [os.path.join(image_folder, filename) for filename in os.listdir(image_folder)]
-                # sorted_image_files = sorted(image_files, key=os.path.getctime)
-                camera_frames[camera_id] = camera.image_data
+                camera_frames.append(camera.current_frame)
             except:
                 print(f"No frames found for camera {camera_id}, or no images are present.")
                 camera.log_error(CameraErrorCodes.NO_IMAGES_FOUND)
-                camera_frames[camera_id] = []  # No images found for this camera
         return camera_frames
     
     # def return_status(self):
     #     pass
 
-    def turn_off_cameras(self,camera_ids: List[int]):
-        """
-       Release cameras of given IDs 
-        """
-        for camera_id in camera_ids:
-            camera = self.cameras.get(camera_id)
-            if camera is not None and hasattr(camera, 'cap') and camera.cap.isOpened():
-                camera.cap.release()
-                print(f"Camera {camera_id} turned off.")
+
+    @classmethod
+    def show(self, frame: Frame):
+        cv2.imshow(f"Camera {frame.camera_id} Frame at {frame.timestamp.strftime('%Y-%m-%d %H:%M:%S')}", frame.frame)
+
+    @classmethod
+    def close_windows(self):
+        cv2.destroyAllWindows()
 
 
-
-
-# Example
-camera_ids = [0] 
-manager = CameraManager(camera_ids)
-
-# Capture images from all cameras
-manager.capture_images()
-# manager.capture_images()
-all = manager.get_available_frames()
-# imgdata = all[0][0]
-# cv2.imshow(f"Camera {imgdata.camera_id} Frame at {imgdata.timestamp.strftime('%Y-%m-%d %H:%M:%S')}", imgdata.frame)
-# cv2.waitKey(0) 
-# cv2.destroyAllWindows()
