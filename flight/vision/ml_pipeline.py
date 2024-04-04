@@ -18,6 +18,33 @@ from flight.vision.rc import RegionClassifier
 from flight.vision.ld import LandmarkDetector
 
 
+class Landmark:
+    """
+    A class to store landmark info including centroid coordinates, geographic coordinates, and classes.
+
+    Attributes:
+        centroid_xy (list of tuples): The centroid coordinates (x, y) of detected landmarks.
+        centroid_latlons (list of tuples): The geographic coordinates (latitude, longitude) of detected landmarks.
+        landmark_classes (list): The classes of the detected landmarks.
+    """
+
+    def __init__(self, centroid_xy, centroid_latlons, landmark_classes):
+        """
+        Initializes the Landmark
+
+        Args:
+            centroid_xy (list of tuples): Centroid coordinates (x, y) of detected landmarks.
+            centroid_latlons (list of tuples): Geographic coordinates (latitude, longitude) of detected landmarks.
+            landmark_classes (list): Classes of detected landmarks.
+        """
+        self.centroid_xy = centroid_xy
+        self.centroid_latlons = centroid_latlons
+        self.landmark_classes = landmark_classes
+
+    def __repr__(self):
+        return f"Landmark(centroid_xy={self.centroid_xy}, centroid_latlons={self.centroid_latlons}, landmark_classes={self.landmark_classes})"
+
+
 class MLPipeline:
     """
     A class representing a machine learning pipeline for processing camera feed frames for
@@ -33,21 +60,6 @@ class MLPipeline:
         """
         self.region_classifier = RegionClassifier()
 
-    def is_frame_dark(self, frame, threshold=0.5):
-        """
-        Determines if a given frame is too dark based on a specified threshold.
-
-        Args:
-            frame (np.array): The frame to analyze, as a NumPy array.
-            threshold (float, optional): The threshold for deciding if a frame is considered dark. Defaults to 0.5.
-
-        Returns:
-            bool: True if the frame is considered too dark, False otherwise.
-        """
-        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        dark_percentage = np.sum(gray_frame < 60) / np.prod(gray_frame.shape)
-        return dark_percentage > threshold
-
     def classify_frame(self, frame):
         """
         Classifies a frame to identify geographic regions using the region classifier.
@@ -62,26 +74,51 @@ class MLPipeline:
         predicted_list = self.region_classifier.classify_region_ids(frame_pil)
         return predicted_list
 
-    def run_ml_pipeline(self, frames_with_ids):
+    def run_ml_pipeline_on_batch(self, frames_with_ids):
         """
-        Processes a series of frames, classifying each for geographic regions and detecting landmarks
-        within those regions if the frame is not too dark.
+        Processes a series of frames, classifying each for geographic regions and detecting landmarks,
+        and returns the detection results along with camera IDs.
 
         Args:
             frames_with_ids (list of tuples): A list where each element is a tuple consisting of
                                               a frame (as a NumPy array) and its associated camera ID.
+
+        Returns:
+            list of tuples: Each tuple consists of the camera ID and the landmark detection results for that frame.
         """
+        results = []
         for frame, camera_id in frames_with_ids:
-            if not self.is_frame_dark(frame):
-                pred_regions = self.classify_frame(frame)
-                print(f"Camera ID {camera_id} detected regions:", pred_regions)
-                for region in pred_regions:
-                    detector = LandmarkDetector(region_id=region)
-                    centroid_xy, centroid_latlons, landmark_classes = (
-                        detector.detect_landmarks(frame)
-                    )
-                    print(
-                        f"    Region {region} Landmarks: {centroid_xy}, {centroid_latlons}, {landmark_classes}"
-                    )
-            else:
-                print(f"Camera ID {camera_id}: Frame is too dark and was skipped.")
+            pred_regions = self.classify_frame(frame)
+            frame_results = []
+            for region in pred_regions:
+                detector = LandmarkDetector(region_id=region)
+                centroid_xy, centroid_latlons, landmark_classes = (
+                    detector.detect_landmarks(frame)
+                )
+                landmark = Landmark(centroid_xy, centroid_latlons, landmark_classes)
+                frame_results.append((region, landmark))
+            results.append((camera_id, frame_results))
+        return results
+
+    def run_ml_pipeline_on_single(self, frame_with_id):
+        """
+        Processes a single frame, classifying it for geographic regions and detecting landmarks,
+        and returns the detection result along with the camera ID.
+
+        Args:
+            frame_with_id (tuple): A tuple consisting of a frame (as a NumPy array) and its associated camera ID.
+
+        Returns:
+            tuple: The camera ID and the landmark detection results for the frame.
+        """
+        frame, camera_id = frame_with_id
+        pred_regions = self.classify_frame(frame)
+        frame_results = []
+        for region in pred_regions:
+            detector = LandmarkDetector(region_id=region)
+            centroid_xy, centroid_latlons, landmark_classes = detector.detect_landmarks(
+                frame
+            )
+            landmark = Landmark(centroid_xy, centroid_latlons, landmark_classes)
+            frame_results.append((region, landmark))
+        return (camera_id, frame_results)
