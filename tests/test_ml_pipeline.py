@@ -1,7 +1,10 @@
 """
 Main Execution Script for ML Pipeline with Fake Camera Feed
 
-This script demonstrates the integration and usage of a machine learning pipeline for region classification and landmark detection using a simulated camera feed. It utilizes the FakeCameraFeed class to generate virtual camera frames and processes them through the MLPipeline to classify geographic regions and detect landmarks within those regions. This example serves as a testbed for verifying the functionality and performance of the vision components in a controlled environment without the need for physical camera inputs.
+- Retrieves frames with IDs from a simulated camera feed
+- Uses FrameProcessor to filter frames suitable for ML inference
+- Applies ML pipeline on the filtered batch of frames for region classification and landmark detection
+- Prints detected landmarks for each frame and corresponding camera ID
 
 Requirement:
     Set the PYTHONPATH environment variable to include the root of project to make the package flight discoverable.
