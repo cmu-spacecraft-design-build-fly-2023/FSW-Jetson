@@ -1,11 +1,10 @@
-
 import flight.vision.camera as camera
-import time 
+import time
 
 
 if __name__ == "__main__":
 
-    camera_ids = [0] 
+    camera_ids = [0]
     manager = camera.CameraManager(camera_ids)
     manager.turn_on_cameras()
 
@@ -17,9 +16,4 @@ if __name__ == "__main__":
         manager.show(frames[0])
         time.sleep(1)
 
-
     manager.turn_off_cameras(camera_ids)
-
-
-
-

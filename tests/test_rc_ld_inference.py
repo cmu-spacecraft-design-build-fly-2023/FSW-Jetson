@@ -19,6 +19,7 @@ import os
 from test_RC_inference import run_rc_inference
 from test_LD_inference import run_ld_inference
 
+
 class InferenceRunner:
     """
     A class to perform landmark detection using a pretrained YOLO model.
@@ -58,7 +59,9 @@ class InferenceRunner:
         for filename, regions in correct_predictions:
             for region in regions:
                 image_path = os.path.join(self.image_dir, filename)
-                label_path = os.path.join(self.label_dir, filename.replace('.jpg', '.txt'))  # Adjust if label files have a different extension
+                label_path = os.path.join(
+                    self.label_dir, filename.replace(".jpg", ".txt")
+                )  # Adjust if label files have a different extension
                 run_ld_inference(image_path, region, label_path, draw_boxes_flag=False)
 
     def display_correct_predictions(self, correct_predictions):
@@ -71,10 +74,11 @@ class InferenceRunner:
         for filename, regions in correct_predictions:
             print(f"{filename}: {', '.join(regions)}")
 
+
 if __name__ == "__main__":
     # Specify directories for images and labels
-    image_dir = 'tests/data/full_inference/img'
-    label_dir = 'tests/data/full_inference/label'
+    image_dir = "tests/data/full_inference/img"
+    label_dir = "tests/data/full_inference/label"
 
     # Initialize the InferenceRunner
     detector = InferenceRunner(image_dir, label_dir)
