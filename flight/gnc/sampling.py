@@ -13,15 +13,16 @@ def sample_attitude():
     Returns:
         np.ndarray: A random attitude quaternion.
     """
-    r_axisangle = (np.random.rand(3)*2*np.pi) - np.pi
+    r_axisangle = (np.random.rand(3) * 2 * np.pi) - np.pi
     θ_n = np.linalg.norm(r_axisangle)
     axis_n = r_axisangle / θ_n
     q = np.concatenate(([np.cos(0.5 * θ_n)], axis_n * np.sin(0.5 * θ_n)))
     return q
 
 
-
-def sample_sun_synchronous_orbit(sma_lb=astrodynamics.R_EARTH + 450e3, sma_ub=astrodynamics.R_EARTH + 750e3):
+def sample_sun_synchronous_orbit(
+    sma_lb=astrodynamics.R_EARTH + 450e3, sma_ub=astrodynamics.R_EARTH + 750e3
+):
     """
     Samples a random sun-synchronous orbit.
 
@@ -38,7 +39,9 @@ def sample_sun_synchronous_orbit(sma_lb=astrodynamics.R_EARTH + 450e3, sma_ub=as
     raan = np.random.rand() * 2 * np.pi
     omega = np.random.rand() * 2 * np.pi
     anomaly = np.random.rand() * 2 * np.pi
-    eci_state = astrodynamics.get_CART_from_OSC(np.array([sma, ecc, i, raan, omega, anomaly]))
+    eci_state = astrodynamics.get_CART_from_OSC(
+        np.array([sma, ecc, i, raan, omega, anomaly])
+    )
     return eci_state
 
 
@@ -55,11 +58,14 @@ def sample_sso_orbit_pos_near_landmark(landmarks, landmark_cone_angle=np.deg2rad
     """
     mean_landmark = np.mean(landmarks, axis=0)
     ra = sample_sun_synchronous_orbit()[:3]
-    while np.dot(mean_landmark / np.linalg.norm(mean_landmark), ra / np.linalg.norm(ra)) < np.cos(landmark_cone_angle) or \
-                (np.linalg.norm(ra) > (astrodynamics.R_EARTH + 750e3)) or  (np.linalg.norm(ra) < (astrodynamics.R_EARTH + 450e3)):  # mission specific
+    while (
+        np.dot(mean_landmark / np.linalg.norm(mean_landmark), ra / np.linalg.norm(ra))
+        < np.cos(landmark_cone_angle)
+        or (np.linalg.norm(ra) > (astrodynamics.R_EARTH + 750e3))
+        or (np.linalg.norm(ra) < (astrodynamics.R_EARTH + 450e3))
+    ):  # mission specific
         ra = sample_sun_synchronous_orbit()[:3]
     return ra
-        
 
 
 def sample_attitude_hemisphere(direction, ang_step=np.deg2rad(20)):
@@ -67,29 +73,28 @@ def sample_attitude_hemisphere(direction, ang_step=np.deg2rad(20)):
     Sample N points on the direction hemisphere.
     """
     if np.array_equal(direction, [0, 0, 1]):
-        longitude_range = np.arange(0, np.pi/2 + ang_step, ang_step)
-        latitude_range = np.arange(0, 2*np.pi + ang_step, ang_step)
+        longitude_range = np.arange(0, np.pi / 2 + ang_step, ang_step)
+        latitude_range = np.arange(0, 2 * np.pi + ang_step, ang_step)
 
     elif np.array_equal(direction, [0, 0, -1]):
-        longitude_range = np.arange(np.pi/2, np.pi + ang_step, ang_step)
-        latitude_range = np.arange(0, 2*np.pi + ang_step, ang_step)
+        longitude_range = np.arange(np.pi / 2, np.pi + ang_step, ang_step)
+        latitude_range = np.arange(0, 2 * np.pi + ang_step, ang_step)
 
     elif np.array_equal(direction, [1, 0, 0]):
         longitude_range = np.arange(0, np.pi + ang_step, ang_step)
-        latitude_range = np.arange(-np.pi/2, np.pi/2 + ang_step, ang_step)
+        latitude_range = np.arange(-np.pi / 2, np.pi / 2 + ang_step, ang_step)
 
     elif np.array_equal(direction, [-1, 0, 0]):
         longitude_range = np.arange(0, np.pi + ang_step, ang_step)
-        latitude_range = np.arange(np.pi/2, 3*np.pi/2 + ang_step , ang_step)
+        latitude_range = np.arange(np.pi / 2, 3 * np.pi / 2 + ang_step, ang_step)
 
     elif np.array_equal(direction, [0, 1, 0]):
         longitude_range = np.arange(0, np.pi + ang_step, ang_step)
         latitude_range = np.arange(0, np.pi + ang_step, ang_step)
-        
+
     elif np.array_equal(direction, [0, -1, 0]):
-        longitude_range = np.arange(0, np.pi + ang_step , ang_step)
-        latitude_range = np.arange(np.pi, 2*np.pi + ang_step, ang_step)
-    
+        longitude_range = np.arange(0, np.pi + ang_step, ang_step)
+        latitude_range = np.arange(np.pi, 2 * np.pi + ang_step, ang_step)
 
     Pt = np.array([0, 0, 1])
 
@@ -110,7 +115,7 @@ def sample_attitude_hemisphere(direction, ang_step=np.deg2rad(20)):
             if np.dot(direction, Q_samples[idx, :, :] @ Pt) < 0:  # reject
                 continue
             idx += 1
-            
+
     return Q_samples[:idx, :, :]
 
 
@@ -132,9 +137,8 @@ def sample_rotation_matrices(P, Q_samples, direction_hemisphere, Q0=np.eye(3)):
     for k in range(Q_samples.shape[0]):
         ϕ = Δ @ np.random.randn(3)
         Q_samples[k, :, :] = Q0 @ expm(skew_symmetric(ϕ))
-        while np.dot(direction_hemisphere, Q_samples[k] @ Pt) < 0:  # Reject samples outside the direction hemisphere
+        while (
+            np.dot(direction_hemisphere, Q_samples[k] @ Pt) < 0
+        ):  # Reject samples outside the direction hemisphere
             ϕ = Δ @ np.random.randn(3)
             Q_samples[k, :, :] = Q0 @ expm(skew_symmetric(ϕ))
-
-    
-

@@ -17,15 +17,16 @@ import numpy as np
 from flight.vision.rc import RegionClassifier
 from flight.vision.ld import LandmarkDetector
 
+
 class MLPipeline:
     """
     A class representing a machine learning pipeline for processing camera feed frames for
     region classification and landmark detection.
-    
+
     Attributes:
         region_classifier (RegionClassifier): An instance of RegionClassifier for classifying geographic regions in frames.
     """
-    
+
     def __init__(self):
         """
         Initializes the MLPipeline class, setting up any necessary components for the machine learning tasks.
@@ -35,11 +36,11 @@ class MLPipeline:
     def is_frame_dark(self, frame, threshold=0.5):
         """
         Determines if a given frame is too dark based on a specified threshold.
-        
+
         Args:
             frame (np.array): The frame to analyze, as a NumPy array.
             threshold (float, optional): The threshold for deciding if a frame is considered dark. Defaults to 0.5.
-        
+
         Returns:
             bool: True if the frame is considered too dark, False otherwise.
         """
@@ -50,10 +51,10 @@ class MLPipeline:
     def classify_frame(self, frame):
         """
         Classifies a frame to identify geographic regions using the region classifier.
-        
+
         Args:
             frame (np.array): The frame to classify, as a NumPy array.
-        
+
         Returns:
             list: A list of predicted region IDs classified from the frame.
         """
@@ -65,7 +66,7 @@ class MLPipeline:
         """
         Processes a series of frames, classifying each for geographic regions and detecting landmarks
         within those regions if the frame is not too dark.
-        
+
         Args:
             frames_with_ids (list of tuples): A list where each element is a tuple consisting of
                                               a frame (as a NumPy array) and its associated camera ID.
@@ -76,7 +77,11 @@ class MLPipeline:
                 print(f"Camera ID {camera_id} detected regions:", pred_regions)
                 for region in pred_regions:
                     detector = LandmarkDetector(region_id=region)
-                    centroid_xy, centroid_latlons, landmark_classes = detector.detect_landmarks(frame)
-                    print(f"    Region {region} Landmarks: {centroid_xy}, {centroid_latlons}, {landmark_classes}")
+                    centroid_xy, centroid_latlons, landmark_classes = (
+                        detector.detect_landmarks(frame)
+                    )
+                    print(
+                        f"    Region {region} Landmarks: {centroid_xy}, {centroid_latlons}, {landmark_classes}"
+                    )
             else:
                 print(f"Camera ID {camera_id}: Frame is too dark and was skipped.")

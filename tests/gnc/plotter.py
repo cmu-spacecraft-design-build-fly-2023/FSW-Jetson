@@ -1,21 +1,18 @@
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
 import numpy as np
-
 
 
 def plot3D(X):
 
     fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    ax.set_zlabel('z') 
+    ax = fig.add_subplot(111, projection="3d")
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
 
+    ax.scatter(0, 0, 0, c="g", label="Central body", marker="o", s=300)
 
-    ax.scatter(0,0,0,c='g',label="Central body", marker='o', s=300)
-
-    ax.plot3D(X[:,0], X[:,1], X[:,2], c='b', label="Free Rigid Body")
-
+    ax.plot3D(X[:, 0], X[:, 1], X[:, 2], c="b", label="Free Rigid Body")
 
     plt.legend()
     plt.show()
@@ -24,15 +21,14 @@ def plot3D(X):
 def scatter3D(X, equal=False):
 
     fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    ax.set_zlabel('z') 
+    ax = fig.add_subplot(111, projection="3d")
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
 
+    ax.scatter(0, 0, 0, c="g", label="Central point", marker="o", s=300)
 
-    ax.scatter(0,0,0,c='g',label="Central point", marker='o', s=300)
-
-    ax.scatter3D(X[:,0], X[:,1], X[:,2], c='b')
+    ax.scatter3D(X[:, 0], X[:, 1], X[:, 2], c="b")
 
     if equal:
         set_axes_equal(ax)
@@ -40,9 +36,10 @@ def scatter3D(X, equal=False):
     plt.legend()
     plt.show()
 
+
 def set_axes_equal(ax):
     """
-    https://stackoverflow.com/questions/13685386/how-to-set-the-equal-aspect-ratio-for-all-axes-x-y-z 
+    https://stackoverflow.com/questions/13685386/how-to-set-the-equal-aspect-ratio-for-all-axes-x-y-z
 
     Make axes of 3D plot have equal scale so that spheres appear as spheres,
     cubes as cubes, etc.
@@ -64,20 +61,19 @@ def set_axes_equal(ax):
 
     # The plot bounding box is a sphere in the sense of the infinity
     # norm, hence I call half the max range the plot radius.
-    plot_radius = 0.5*max([x_range, y_range, z_range])
+    plot_radius = 0.5 * max([x_range, y_range, z_range])
 
     ax.set_xlim3d([x_middle - plot_radius, x_middle + plot_radius])
     ax.set_ylim3d([y_middle - plot_radius, y_middle + plot_radius])
     ax.set_zlim3d([z_middle - plot_radius, z_middle + plot_radius])
+
 
 def splot(x):
     plt.plot(x)
     plt.show()
 
 
-
 def compare(x, y1, y2):
     plt.plot(x, y1)
     plt.plot(x, y2)
     plt.show()
-
