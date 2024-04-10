@@ -6,6 +6,7 @@ from datetime import datetime
 import logging
 from typing import List
 import numpy as np
+import subprocess
 
 
 logging.basicConfig(filename='camera_errors.log', level=logging.ERROR,
@@ -111,9 +112,12 @@ class Camera:
                 ret, frame = self.cap.read()
                 if ret:
                     if not self.is_blinded_by_sun(frame):
+                        exposure_value = f"v4l2-ctl -d /dev/video{self.camera_id} --get-ctrl exposure_absolute"
+                        subprocess.run(exposure_value, shell=True, check=True)
+
                         timestamp = datetime.now()
-                        # image_name = f"{self.image_folder}/{timestamp}.jpg"
-                        # cv2.imwrite(image_name, frame)
+                        image_name = f"{self.image_folder}/{timestamp}.jpg"
+                        cv2.imwrite(image_name, frame)
                         print(f"Image captured from camera {self.camera_id} at {timestamp}")
                         self.image_data.append(ImageData(self.camera_id,frame,timestamp))
                     else:
@@ -172,8 +176,29 @@ class Camera:
             self.cap.set(cv2.CAP_PROP_FOCUS, self.focus)
 
     def set_exposure(self):
-        if hasattr(self, 'cap') and self.cap.isOpened():
-            self.cap.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
+        # if hasattr(self, 'cap') and self.cap.isOpened():
+        #     self.cap.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
+        try:
+            # disable auto mode 
+            disable_auto_exposure_command = f"v4l2-ctl -d /dev/video{self.camera_id} --set-ctrl exposure_auto=1"
+            subprocess.run(disable_auto_exposure_command, shell=True, check=True)
+
+            command = f"v4l2-ctl -d /dev/video{self.camera_id} --set-ctrl exposure_absolute={self.exposure}"
+            subprocess.run(command, shell=True, check=True)
+            print(f"Exposure set to {self.exposure} for camera {self.camera_id}.")
+
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to set exposure for camera {self.camera_id}: {e}")
+            self.log_error(CameraErrorCodes.CONFIGURATION_ERROR)
+
+    def enable_default_exposure(self):
+        command = f"v4l2-ctl -d /dev/video{self.camera_id} --set-ctrl exposure_absolute={1}"
+        subprocess.run(command, shell=True, check=True)
+
+        # enable_auto_exposure_command = f"v4l2-ctl -d /dev/video{self.camera_id} --set-ctrl exposure_auto=3"
+        # subprocess.run(enable_auto_exposure_command, shell=True, check=True)
+
+
     
     def is_blinded_by_sun(self, image):
 
@@ -195,7 +220,7 @@ class CameraManager:
         self.cameras = {camera_id: Camera(camera_id) for camera_id in camera_ids}
         number_of_cameras = 6
         self.camera_frames = np.zeros([number_of_cameras,3])
-
+    
     def capture_images(self):
         """
        capture stores images for all cameras given in the list
@@ -203,6 +228,15 @@ class CameraManager:
         for camera_id, camera in self.cameras.items():
             camera.capture_image()
     
+    def set_exposure(self):
+        for camera_id, camera in self.cameras.items():
+            camera.set_exposure()
+    
+    def enable_default_exposure(self):
+        for camera_id, camera in self.cameras.items():
+            camera.enable_default_exposure()
+
+
     def turn_on_cameras(self):
         """
        re-initialises cameras
@@ -264,9 +298,18 @@ manager = CameraManager(camera_ids)
 
 # Capture images from all cameras
 manager.capture_images()
-# manager.capture_images()
+manager.set_exposure()
+manager.capture_images()  
+manager.enable_default_exposure()
+manager.capture_images()
+
 all = manager.get_available_frames()
-# imgdata = all[0][0]
+# imgdata = all
+# for i in camera_ids:
+#     imgd = all[i][0]
+#     print(imgd.timestamp.strftime('%Y-%m-%d %H:%M:%S'))
+    
+
 # cv2.imshow(f"Camera {imgdata.camera_id} Frame at {imgdata.timestamp.strftime('%Y-%m-%d %H:%M:%S')}", imgdata.frame)
 # cv2.waitKey(0) 
 # cv2.destroyAllWindows()
