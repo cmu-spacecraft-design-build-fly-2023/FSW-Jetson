@@ -16,10 +16,8 @@ Date: [Creation or Last Update Date]
 """
 
 import numpy as np
-import cv2
 from ultralytics import YOLO
 import os
-import sys
 import csv
 
 
@@ -244,7 +242,7 @@ class LandmarkDetector:
         landmark_wh = landmark_arr[:, 3:5]  # Width and height [w, h]
 
         # Calculate the top-left and bottom-right coordinates of the bounding boxes
-        corner_xy = self.calculate_bounding_boxes(centroid_xy, landmark_wh)
+        self.calculate_bounding_boxes(centroid_xy, landmark_wh)
 
         # Get bounding box lat/lon based on ground truth
         centroid_latlons, corner_latlons = self.get_latlons(landmark_class)

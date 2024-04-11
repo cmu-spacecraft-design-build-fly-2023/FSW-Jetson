@@ -148,7 +148,7 @@ class RegionClassifier:
             classes = torch.arange(probabilities.size(1))[probs_mask.squeeze()]
 
             # Convert to lists for easier handling outside PyTorch
-            probs_list = probs.squeeze().tolist()
+            probs.squeeze().tolist()
             classes_list = classes.tolist()
 
             predicted_region_ids = [self.region_ids[index] for index in classes_list]

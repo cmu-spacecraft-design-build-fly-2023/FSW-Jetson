@@ -7,7 +7,6 @@ Author: Eddie
 Date: [Creation or Last Update Date]
 """
 
-import cv2
 import numpy as np
 
 

@@ -14,12 +14,8 @@ Author: Eddie
 Date: [Creation or Last Update Date]
 """
 
-import cv2
-import numpy as np
-from PIL import Image
 from collections import Counter
 
-from flight.vision.rc import RegionClassifier
 from flight.vision import MLPipeline, FrameProcessor
 from fake_camera_feed import FakeCameraFeed
 
