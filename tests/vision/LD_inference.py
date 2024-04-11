@@ -24,7 +24,6 @@ What It Does:
 Author: Eddie
 """
 
-import sys
 import cv2
 import csv
 import numpy as np
@@ -118,7 +117,8 @@ def calculate_errors(detected_class_centroids, ground_truth_centroids):
                     np.array(detected_centroid) - np.array(gt_centroid)
                 )
                 class_errors[detected_cls] = error  # Store error by class
-                all_errors.append(error)  # Add error to the list for mean calculation
+                # Add error to the list for mean calculation
+                all_errors.append(error)
                 break
     mean_error = np.mean(all_errors) if all_errors else float("nan")
     return class_errors, mean_error
@@ -248,11 +248,12 @@ def run_ld_inference_test(region_id, draw_boxes_flag=False, data_path=None):
 
     # Directory setup
     if data_path is None:
-        data_path = "inference_data/LD_testdata" + region_id + "_top_salient"
+        data_path = "vision/inference_data/LD_testdata/" + region_id + "_top_salient"
     images_dir = data_path + "/img/"
     label_dir = data_path + "/label/"
-    output_dir = "tests/inference_output/"
-    os.makedirs(output_dir, exist_ok=True)  # Ensure the output directory exists
+    output_dir = "tests/vision/inference_output/"
+    # Ensure the output directory exists
+    os.makedirs(output_dir, exist_ok=True)
 
     # Get a list of image files in the directory
     image_files = [
