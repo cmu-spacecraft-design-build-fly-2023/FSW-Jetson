@@ -1,12 +1,12 @@
 import numpy as np
 import brahe
 from scipy.linalg import expm, cholesky
-
 from flight.gnc import astrodynamics
 from flight.gnc.utils import *
+from typing import List, Tuple
 
 
-def sample_attitude():
+def sample_attitude() -> np.ndarray:
     """
     Samples a random attitude quaternion.
 

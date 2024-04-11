@@ -1,11 +1,19 @@
 import numpy as np
 import brahe
+from typing import List, Union
+import numpy as np
+import brahe
 
 
 R_EARTH = 6.378e6
 
 
-def get_CART_from_OSC(x_oe, degrees=False):
+R_EARTH: float = 6.378e6
+
+
+def get_CART_from_OSC(
+    x_oe: List[Union[float, int]], degrees: bool = False
+) -> np.ndarray:
     """
     Return the cartesian state (position and velocity, ECI) given the corresponding set of osculating orbital elements.
     The vector must contain in order (SatelliteDynamics.jl):
@@ -19,7 +27,9 @@ def get_CART_from_OSC(x_oe, degrees=False):
     return np.array(brahe.sOSCtoCART(x_oe, use_degrees=degrees))
 
 
-def get_OSC_from_CART(x_oe, degrees=False):
+def get_OSC_from_CART(
+    x_oe: List[Union[float, int]], degrees: bool = False
+) -> np.ndarray:
     """
     Return the set of osculating orbital elements given the cartesian state (position and velocity, ECI).
     The input vector must be in the following form: [x, y, z, xdot, ydot, zdot]

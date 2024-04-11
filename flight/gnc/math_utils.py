@@ -1,8 +1,11 @@
 import numpy as np
 from scipy.linalg import expm, cholesky
+from typing import List
+import numpy as np
+from scipy.linalg import expm, cholesky
 
 
-def dcm_from_q(q):
+def dcm_from_q(q: np.ndarray) -> np.ndarray:
     norm = np.linalg.norm(q)
     if norm == 0:
         raise ZeroDivisionError("Quaternion norm is zero")
@@ -32,7 +35,7 @@ def dcm_from_q(q):
     return Q
 
 
-def rotm2quat(r):
+def rotm2quat(r: np.ndarray) -> np.ndarray:
     trace = r[0, 0] + r[1, 1] + r[2, 2]
     q = np.zeros(4)
 
@@ -60,23 +63,25 @@ def rotm2quat(r):
         q[1] = (r[0, 2] + r[2, 0]) / s
         q[2] = (r[1, 2] + r[2, 1]) / s
         q[3] = 0.25 * s
-    
+
     return q
 
 
-def geodesic_distance(q1, q2):
+def geodesic_distance(q1: np.ndarray, q2: np.ndarray) -> float:
     # shortest path on the unit sphere
     return 1 - abs(np.dot(q1, q2))
 
 
-def random_rotation_matrix(P, Q0=np.diag(np.ones(3))):
+def random_rotation_matrix(
+    P: np.ndarray, Q0: np.ndarray = np.diag(np.ones(3))
+) -> np.ndarray:
     Δ = cholesky(P, lower=True)
     ϕ = Δ @ np.random.randn(3, 1)
     rot = Q0 @ expm(skew_symmetric(ϕ))
     return rot
 
 
-def L(q):
+def L(q: np.ndarray) -> np.ndarray:
     """
     Left-multiply
     """
@@ -88,7 +93,7 @@ def L(q):
     return L
 
 
-def R(q):
+def R(q: np.ndarray) -> np.ndarray:
     """
     Right-multiply
     """
