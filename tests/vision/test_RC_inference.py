@@ -34,7 +34,7 @@ def run_rc_inference(image_dir):
     Returns:
         list: A list of tuples, each containing the filename and the predicted regions that were correct.
     """
-    output_path = "tests/inference_output/RC_inference_results.csv"
+    output_path = "tests/vision/inference_output/RC_inference_results.csv"
     config_path = "configuration/inference_config.yml"
 
     # Load the configuration file
@@ -109,7 +109,7 @@ def run_rc_inference(image_dir):
 
 
 if __name__ == "__main__":
-    image_dir = "tests/data/full_inference/img"
+    image_dir = "tests/vision/data/full_inference/img"
     correct_predictions = run_rc_inference(image_dir)
 
     for filename, regions in correct_predictions:

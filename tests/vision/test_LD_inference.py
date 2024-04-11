@@ -248,10 +248,10 @@ def run_ld_inference_test(region_id, draw_boxes_flag=False, data_path=None):
 
     # Directory setup
     if data_path is None:
-        data_path = "inference_data/LD_testdata" + region_id + "_top_salient"
+        data_path = "vision/inference_data/LD_testdata/" + region_id + "_top_salient"
     images_dir = data_path + "/img/"
     label_dir = data_path + "/label/"
-    output_dir = "tests/inference_output/"
+    output_dir = "tests/vision/inference_output/"
     os.makedirs(output_dir, exist_ok=True)  # Ensure the output directory exists
 
     # Get a list of image files in the directory
