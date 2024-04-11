@@ -222,7 +222,6 @@ class Camera:
 
                     break
                 if cv2.waitKey(1) & 0xFF == ord("q"):
-                if cv2.waitKey(1) & 0xFF == ord("q"):
                     break
             self.cap.release()
             cv2.destroyAllWindows()
@@ -240,8 +239,27 @@ class Camera:
             self.cap.set(cv2.CAP_PROP_FOCUS, self.focus)
 
     def set_exposure(self):
-        if hasattr(self, 'cap') and self.cap.isOpened():
-            self.cap.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
+        # if hasattr(self, 'cap') and self.cap.isOpened():
+        #     self.cap.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
+        try:
+            # disable auto mode 
+            disable_auto_exposure_command = f"v4l2-ctl -d /dev/video{self.camera_id} --set-ctrl exposure_auto=1"
+            subprocess.run(disable_auto_exposure_command, shell=True, check=True)
+
+            command = f"v4l2-ctl -d /dev/video{self.camera_id} --set-ctrl exposure_absolute={self.exposure}"
+            subprocess.run(command, shell=True, check=True)
+            print(f"Exposure set to {self.exposure} for camera {self.camera_id}.")
+
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to set exposure for camera {self.camera_id}: {e}")
+            self.log_error(CameraErrorCodes.CONFIGURATION_ERROR)
+
+    def enable_default_exposure(self):
+        command = f"v4l2-ctl -d /dev/video{self.camera_id} --set-ctrl exposure_absolute={1}"
+        subprocess.run(command, shell=True, check=True)
+
+        # enable_auto_exposure_command = f"v4l2-ctl -d /dev/video{self.camera_id} --set-ctrl exposure_auto=3"
+        # subprocess.run(enable_auto_exposure_command, shell=True, check=True)
     
     def is_blinded_by_sun(self, image):
 
@@ -276,6 +294,14 @@ class CameraManager:
         for camera_id, camera in self.cameras.items():
             camera.capture_image()
     
+    def set_exposure(self):
+        for camera_id, camera in self.cameras.items():
+            camera.set_exposure()
+    
+    def enable_default_exposure(self):
+        for camera_id, camera in self.cameras.items():
+            camera.enable_default_exposure()
+
     def turn_on_cameras(self):
         """
         re-initialises cameras
