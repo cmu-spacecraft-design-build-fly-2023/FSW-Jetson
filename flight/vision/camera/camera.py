@@ -14,6 +14,12 @@ logging.basicConfig(
     format="%(asctime)s - Camera %(name)s - %(levelname)s - %(message)s",
 )
 
+logging.basicConfig(
+    filename="camera_errors.log",
+    level=logging.ERROR,
+    format="%(asctime)s - Camera %(name)s - %(levelname)s - %(message)s",
+)
+
 
 class CameraErrorCodes:
     CAMERA_INITIALIZATION_FAILED = 1001
@@ -32,6 +38,7 @@ error_messages = {
     CameraErrorCodes.READ_FRAME_ERROR: "Error reading frame.",
     CameraErrorCodes.SUN_BLIND: "Image blinded by the sun",
     CameraErrorCodes.CAMERA_NOT_OPERATIONAL: "Camera is not operational.",
+    CameraErrorCodes.CONFIGURATION_ERROR: "Configuration error.",
     CameraErrorCodes.CONFIGURATION_ERROR: "Configuration error.",
 }
 
@@ -54,7 +61,11 @@ class Camera:
             logging.error(
                 f"{error_messages[CameraErrorCodes.CONFIGURATION_ERROR]}: {e}"
             )
+            logging.error(
+                f"{error_messages[CameraErrorCodes.CONFIGURATION_ERROR]}: {e}"
+            )
             raise ValueError(error_messages[CameraErrorCodes.CONFIGURATION_ERROR])
+
 
         self.camera_id = camera_id
         self.image_folder = f"captured_images/camera_{camera_id}"
@@ -86,11 +97,17 @@ class Camera:
             elapsed_time = (
                 time.time() - start_time
             ) * 1000  # Calculate elapsed time in milliseconds
+            elapsed_time = (
+                time.time() - start_time
+            ) * 1000  # Calculate elapsed time in milliseconds
             if elapsed_time <= self.max_startup_time:
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.resolution[0])
                 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.resolution[1])
                 return 1
             else:
+                print(
+                    f"Camera {self.camera_id} initialization exceeded {self.max_startup_time} milliseconds."
+                )
                 print(
                     f"Camera {self.camera_id} initialization exceeded {self.max_startup_time} milliseconds."
                 )
@@ -157,6 +174,10 @@ class Camera:
             [os.path.join(self.image_folder, filename) for filename in image_files],
             key=os.path.getctime,
         )
+        latest_image_path = max(
+            [os.path.join(self.image_folder, filename) for filename in image_files],
+            key=os.path.getctime,
+        )
         return cv2.imread(latest_image_path)
 
     def set_zoom(self):
@@ -196,6 +217,7 @@ class Camera:
                     self.log_error(CameraErrorCodes.READ_FRAME_ERROR)
 
                     break
+                if cv2.waitKey(1) & 0xFF == ord("q"):
                 if cv2.waitKey(1) & 0xFF == ord("q"):
                     break
             self.cap.release()
