@@ -150,7 +150,7 @@ def sampling_search(
     P_cr = (initial_angular_sampling_step**2) * np.eye(3)
     for i in range(
         max_iterations
-    ):  ## TODO - other stopping condition based on cost reduction
+    ):  # TODO - other stopping condition based on cost reduction
         P_cr = P_cr * decay
         # TODO pre-allocate but handle the case where the number of samples is less than N_samples (rejection sampling)
         Q_samples = np.zeros((N_samples, 3, 3))

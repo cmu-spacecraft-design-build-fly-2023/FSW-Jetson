@@ -67,7 +67,7 @@ def find_camera_ID(camera_body_frames, gt_attitude_q, landmarks):
 
 if __name__ == "__main__":
 
-    from time import sleep
+    pass
 
     # Load landmarks from CSV file
     landmarks = np.loadtxt("tests/gnc/data/4/landmarks.csv", delimiter=",")

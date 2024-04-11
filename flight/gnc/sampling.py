@@ -1,9 +1,8 @@
 import numpy as np
 import brahe
-from scipy.linalg import expm, cholesky
+from scipy.linalg import expm
 from flight.gnc import astrodynamics
 from flight.gnc.utils import *
-from typing import List, Tuple
 
 
 def sample_attitude() -> np.ndarray:

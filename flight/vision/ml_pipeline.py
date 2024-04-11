@@ -13,7 +13,6 @@ Date: [Creation or Last Update Date]
 # import necessary modules
 from PIL import Image
 import cv2
-import numpy as np
 from flight.vision.rc import RegionClassifier
 from flight.vision.ld import LandmarkDetector
 

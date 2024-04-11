@@ -17,7 +17,8 @@ import pytest
     "q, expected_dcm",
     [
         (np.array([1, 0, 0, 0]), np.identity(3)),  # Identity quaternion
-        (np.array([2, 0, 0, 0]), np.identity(3)),  # Unnormalized identity quaternion
+        # Unnormalized identity quaternion
+        (np.array([2, 0, 0, 0]), np.identity(3)),
         (np.array([-1, -1, -1, -1]), None),  # Negative quaternion
     ],
 )

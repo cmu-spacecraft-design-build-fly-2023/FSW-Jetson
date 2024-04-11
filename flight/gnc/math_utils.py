@@ -1,6 +1,5 @@
 import numpy as np
 from scipy.linalg import expm, cholesky
-from typing import List
 import numpy as np
 from scipy.linalg import expm, cholesky
 

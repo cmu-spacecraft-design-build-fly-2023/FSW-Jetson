@@ -17,7 +17,6 @@ Date: [Creation or Last Update Date]
 """
 
 import os
-import sys
 import csv
 from PIL import Image
 import yaml

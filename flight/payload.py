@@ -20,7 +20,6 @@ class PayloadManager:
 
     def __init__(self):
         self.mode = STARTUP
-        pass
 
     def run_debug(self):
         pass
