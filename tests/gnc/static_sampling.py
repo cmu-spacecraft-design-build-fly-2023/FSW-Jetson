@@ -2,6 +2,7 @@ import numpy as np
 from flight.gnc import sampling, triangulation
 from flight.gnc.utils import *
 
+# TODO - update with pose and camera frames instead of directional vectors
 
 camera_body_frames = {
     # ID 1: Top X-axis (Positive X-direction)
