@@ -14,7 +14,10 @@ def compute_nadir_vector(orbit_pos):
     Returns:
         np.ndarray: Nadir vector.
     """
-    return -orbit_pos / np.linalg.norm(orbit_pos)
+    norm = np.linalg.norm(orbit_pos)
+    if norm == 0:
+        raise ValueError("Invalid orbit position: norm is zero.")
+    return -orbit_pos / norm
 
 
 def nadir_pointing_attitude(vec_to_align, nadir_dir):
@@ -28,9 +31,18 @@ def nadir_pointing_attitude(vec_to_align, nadir_dir):
     Returns:
         np.ndarray: Quaternion representing the nadir pointing attitude.
     """
-    c = np.cross(vec_to_align, nadir_dir)
+    norm_vec_to_align = np.linalg.norm(vec_to_align)
+    norm_nadir_dir = np.linalg.norm(nadir_dir)
+    
+    if norm_vec_to_align == 0 or norm_nadir_dir == 0:
+        raise ValueError("Invalid input vectors: norm is zero.")
+    
+    vec_to_align_normalized = vec_to_align / norm_vec_to_align
+    nadir_dir_normalized = nadir_dir / norm_nadir_dir
+    
+    c = np.cross(vec_to_align_normalized, nadir_dir_normalized)
     n = c / np.linalg.norm(c)
-    theta = np.arctan2(np.linalg.norm(c), np.dot(vec_to_align, nadir_dir))
+    theta = np.arctan2(np.linalg.norm(c), np.dot(vec_to_align_normalized, nadir_dir_normalized))
     dq = np.hstack((np.cos(theta / 2), n * np.sin(theta / 2)))
     dq = dq / np.linalg.norm(dq)
     return dq

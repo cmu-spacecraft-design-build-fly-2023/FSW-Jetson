@@ -4,7 +4,9 @@ from scipy.linalg import expm, cholesky
 
 def dcm_from_q(q):
     norm = np.linalg.norm(q)
-    q0, q1, q2, q3 = q / norm if norm != 0 else q
+    if norm == 0:
+        raise ZeroDivisionError("Quaternion norm is zero")
+    q0, q1, q2, q3 = q / norm
 
     # DCM
     Q = np.array(
@@ -31,15 +33,39 @@ def dcm_from_q(q):
 
 
 def rotm2quat(r):
+    trace = r[0, 0] + r[1, 1] + r[2, 2]
     q = np.zeros(4)
-    q[0] = 0.5 * np.sqrt(1 + r[0, 0] + r[1, 1] + r[2, 2])
-    q[1] = (1 / (4 * q[0])) * (r[2][1] - r[1][2])
-    q[2] = (1 / (4 * q[0])) * (r[0][2] - r[2][0])
-    q[3] = (1 / (4 * q[0])) * (r[1][0] - r[0][1])
-    return np.array(q)
+
+    if trace > 0:
+        s = 0.5 / np.sqrt(trace + 1.0)
+        q[0] = 0.25 / s
+        q[1] = (r[2, 1] - r[1, 2]) * s
+        q[2] = (r[0, 2] - r[2, 0]) * s
+        q[3] = (r[1, 0] - r[0, 1]) * s
+    elif (r[0, 0] > r[1, 1]) and (r[0, 0] > r[2, 2]):
+        s = 2.0 * np.sqrt(1.0 + r[0, 0] - r[1, 1] - r[2, 2])
+        q[0] = (r[2, 1] - r[1, 2]) / s
+        q[1] = 0.25 * s
+        q[2] = (r[0, 1] + r[1, 0]) / s
+        q[3] = (r[0, 2] + r[2, 0]) / s
+    elif r[1, 1] > r[2, 2]:
+        s = 2.0 * np.sqrt(1.0 + r[1, 1] - r[0, 0] - r[2, 2])
+        q[0] = (r[0, 2] - r[2, 0]) / s
+        q[1] = (r[0, 1] + r[1, 0]) / s
+        q[2] = 0.25 * s
+        q[3] = (r[1, 2] + r[2, 1]) / s
+    else:
+        s = 2.0 * np.sqrt(1.0 + r[2, 2] - r[0, 0] - r[1, 1])
+        q[0] = (r[1, 0] - r[0, 1]) / s
+        q[1] = (r[0, 2] + r[2, 0]) / s
+        q[2] = (r[1, 2] + r[2, 1]) / s
+        q[3] = 0.25 * s
+    
+    return q
 
 
 def geodesic_distance(q1, q2):
+    # shortest path on the unit sphere
     return 1 - abs(np.dot(q1, q2))
 
 
