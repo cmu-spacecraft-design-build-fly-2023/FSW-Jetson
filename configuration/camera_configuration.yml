@@ -1,46 +1,45 @@
-camera:
-  max_startup_time: 10000  #startup time in milliseconds
-  cameras:
-      0:  # Camera ID 1
-        zoom: 1.0
-        focus: 10
-        exposure: 5000
-        resolution:
-          width: 1280
-          height: 720
-      1:  # Camera ID 2
-        zoom: 1.5
-        focus: 20
-        exposure: -4
-        resolution:
-          width: 1280
-          height: 720
-      2:  # Camera ID 3
-        zoom: 2.0
-        focus: 30
-        exposure: -6
-        resolution:
-          width: 1280
-          height: 720
-      6:  # Camera ID 4
-        zoom: 1.0
-        focus: 10
-        exposure: -3
-        resolution:
-          width: 1280
-          height: 720
-      8:  # Camera ID 5
-        zoom: 1.5
-        focus: 20
-        exposure: -4
-        resolution:
-          width: 1280
-          height: 720
-      10:  # Camera ID 6
-        zoom: 2.0
-        focus: 30
-        exposure: -6
-        resolution:
-          width: 1280
-          height: 720
+max_startup_time: 10000  #startup time in milliseconds
+cameras:
+    0:  # Camera ID 1
+      zoom: 1.0
+      focus: 10
+      exposure: 1
+      resolution:
+        width: 1280
+        height: 720
+    1:  # Camera ID 2
+      zoom: 1.5
+      focus: 20
+      exposure: -4
+      resolution:
+        width: 1280
+        height: 720
+    2:  # Camera ID 3
+      zoom: 2.0
+      focus: 30
+      exposure: -6
+      resolution:
+        width: 1280
+        height: 720
+    3:  # Camera ID 4
+      zoom: 1.0
+      focus: 10
+      exposure: -3
+      resolution:
+        width: 1280
+        height: 720
+    4:  # Camera ID 5
+      zoom: 1.5
+      focus: 20
+      exposure: -4
+      resolution:
+        width: 1280
+        height: 720
+    5:  # Camera ID 6
+      zoom: 2.0
+      focus: 30
+      exposure: -6
+      resolution:
+        width: 1280
+        height: 720
 
