@@ -12,7 +12,18 @@ Date: [Creation or Last Update Date]
 
 import cv2
 import numpy as np
+import logging
+from flight import Logger
 
+# Initialize Logger
+logger_instance = Logger(log_file='log/demo_system.log', log_level=logging.DEBUG)
+logger = logger_instance.get_logger()
+
+# Define error messages
+error_messages = {
+    'CONVERSION_ERROR': "Error converting image to grayscale.",
+    'PROCESSING_ERROR': "Error during frame processing."
+}
 
 class FrameProcessor:
     """
@@ -42,12 +53,15 @@ class FrameProcessor:
         """
         suitable_frames_with_ids = []
         for frame, camera_id in frames_with_ids:
-            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            dark_percentage = np.sum(gray_frame < brightness_threshold) / np.prod(
-                gray_frame.shape
-            )
-            if dark_percentage <= dark_threshold:
-                suitable_frames_with_ids.append((frame, camera_id))
+            try:
+                gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                dark_percentage = np.sum(gray_frame < brightness_threshold) / np.prod(
+                    gray_frame.shape
+                )
+                if dark_percentage <= dark_threshold:
+                    suitable_frames_with_ids.append((frame, camera_id))
+            except Exception as e:
+                logger.error(f"{error_messages['CONVERSION_ERROR']} or processing error: {e}")
         return suitable_frames_with_ids
 
     def process_for_star_tracker(
@@ -66,10 +80,13 @@ class FrameProcessor:
         """
         suitable_frames_with_ids = []
         for frame, camera_id in frames_with_ids:
-            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            dark_percentage = np.sum(gray_frame < brightness_threshold) / np.prod(
-                gray_frame.shape
-            )
-            if dark_percentage > dark_threshold:
-                suitable_frames_with_ids.append((frame, camera_id))
+            try:
+                gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                dark_percentage = np.sum(gray_frame < brightness_threshold) / np.prod(
+                    gray_frame.shape
+                )
+                if dark_percentage > dark_threshold:
+                    suitable_frames_with_ids.append((frame, camera_id))
+            except Exception as e:
+                logger.error(f"{error_messages['CONVERSION_ERROR']} or processing error: {e}")
         return suitable_frames_with_ids

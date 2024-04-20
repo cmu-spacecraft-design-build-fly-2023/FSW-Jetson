@@ -27,7 +27,7 @@ def main():
     camera_ids = [0,2,4,6] 
 
     # create camera manager  
-    cm = CameraManager(camera_ids)
+    cm = CameraManager(camera_ids, "/home/riverflame/Spacecraft/FSW-Jetson/configuration/camera_configuration.yml")
 
     # capture frames and store images of all cameras 
     cm.capture_frames()

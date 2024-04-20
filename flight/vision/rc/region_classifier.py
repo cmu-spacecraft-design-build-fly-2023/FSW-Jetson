@@ -18,10 +18,27 @@ import torch
 import torch.nn.functional as F
 from torchvision import transforms
 from efficientnet_pytorch import EfficientNet
+import logging
 
 LD_MODEL_SUF = ".pth"
 NUM_CLASS = 15
 
+from flight import Logger
+logger_instance = Logger(log_file='log/demo_system.log', log_level=logging.DEBUG)
+logger = logger_instance.get_logger()
+
+# Define error and info messages
+error_messages = {
+    'CONFIGURATION_ERROR': "Configuration error.",
+    'MODEL_LOADING_FAILED': "Failed to load model.",
+    'CLASSIFICATION_FAILED': "Classification process failed."
+}
+
+info_messages = {
+    'INITIALIZATION_START': "Initializing RegionClassifier.",
+    'MODEL_LOADED': "Model loaded successfully.",
+    'CLASSIFICATION_START': "Starting the classification process."
+}
 
 class RegionClassifier:
     def __init__(self, model_name="efficientnet-b0"):
@@ -32,29 +49,38 @@ class RegionClassifier:
             model_path (str): Path to the directory containing the model weights.
             model_name (str): Name of the EfficientNet model variant to use.
         """
+
+        logger.info(info_messages['INITIALIZATION_START'])
+
         model_path, config_path = self.construct_paths()
 
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        # Initialize the model for the specified number of classes
-        self.model = EfficientNet.from_pretrained(model_name, num_classes=NUM_CLASS)
+        try:
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            # Initialize the model for the specified number of classes
+            self.model = EfficientNet.from_pretrained(model_name, num_classes=NUM_CLASS)
 
-        # Adjust final layer to match number of classes
-        in_features = (
-            self.model._fc.in_features
-        )  # Get the number of input features for the final layer
-        self.model._fc = torch.nn.Linear(
-            in_features, NUM_CLASS
-        )  # Adjust the final layer
+            # Adjust final layer to match number of classes
+            in_features = (
+                self.model._fc.in_features
+            )  # Get the number of input features for the final layer
+            self.model._fc = torch.nn.Linear(
+                in_features, NUM_CLASS
+            )  # Adjust the final layer
 
-        # Load Custom model weights
-        self.model.load_state_dict(
-            torch.load(
-                os.path.join(model_path, "RC_16_regions" + LD_MODEL_SUF),
-                map_location=self.device,
+            # Load Custom model weights
+            self.model.load_state_dict( 
+                torch.load(
+                    os.path.join(model_path, "RC_16_regions" + LD_MODEL_SUF),
+                    map_location=self.device,
+                )
             )
-        )
-        self.model = self.model.to(self.device)
-        self.model.eval()
+            self.model = self.model.to(self.device)
+            self.model.eval()
+            logger.info(info_messages['MODEL_LOADED'])
+
+        except Exception as e:
+            logger.error(f"{error_messages['MODEL_LOADING_FAILED']}: {e}")
+            raise
 
         # Define the preprocessing
         self.transforms = transforms.Compose(
@@ -75,15 +101,18 @@ class RegionClassifier:
         return model_path, config_path
 
     def load_region_ids(self, config_path):
-        # Load the configuration file
-        with open(config_path, "r") as file:
-            config = yaml.safe_load(file)
+        region_ids = []
+        try:
+            # Load the configuration file
+            with open(config_path, "r") as file:
+                config = yaml.safe_load(file)
 
-        # Extract region_ids from the configuration file
-        region_ids = config.get("region_ids", [])
+            # Extract region_ids from the configuration file
+            region_ids = config.get("region_ids", [])
 
-        if not region_ids:
-            raise ValueError("No region IDs found in the configuration file.")
+        except Exception as e:
+            logger.error(f"{error_messages['CONFIGURATION_ERROR']}: {e}")
+            raise
 
         return region_ids
 
@@ -131,26 +160,35 @@ class RegionClassifier:
             tuple: A tuple containing two lists; the first list contains the class IDs with probabilities
             above a threshold, and the second list contains the corresponding probabilities.
         """
-        img = self.transforms(img).unsqueeze(0)  # Add batch dimension
-        img = img.to(self.device)
+        logger.info(info_messages['CLASSIFICATION_START'])
+        predicted_region_ids = []
+        try:
+            img = self.transforms(img).unsqueeze(0)  # Add batch dimension
+            img = img.to(self.device)
 
-        with torch.no_grad():
-            outputs = self.model(img)
-            probabilities = F.softmax(
-                outputs, dim=1
-            )  # Apply softmax to convert to probabilities
-            # _, predicted = torch.max(probabilities, 1)  # Get the class with the highest probability
+            with torch.no_grad():
+                outputs = self.model(img)
+                probabilities = F.softmax(
+                    outputs, dim=1
+                )  # Apply softmax to convert to probabilities
+                # _, predicted = torch.max(probabilities, 1)  # Get the class with the highest probability
 
-            # Filter classes with probabilities greater than a threshold (close to zero)
-            threshold = 1e-6  # Small threshold to account for floating-point precision
-            probs_mask = probabilities > threshold
-            probs = probabilities[probs_mask]
-            classes = torch.arange(probabilities.size(1))[probs_mask.squeeze()]
+                # Filter classes with probabilities greater than a threshold (close to zero)
+                threshold = 1e-6  # Small threshold to account for floating-point precision
+                probs_mask = probabilities > threshold
+                probs = probabilities[probs_mask]
+                classes = torch.arange(probabilities.size(1))[probs_mask.squeeze()]
 
-            # Convert to lists for easier handling outside PyTorch
-            probs.squeeze().tolist()
-            classes_list = classes.tolist()
+                # Convert to lists for easier handling outside PyTorch
+                probs.squeeze().tolist()
+                classes_list = classes.tolist()
 
-            predicted_region_ids = [self.region_ids[index] for index in classes_list]
+                predicted_region_ids = [self.region_ids[index] for index in classes_list]
+                
+        except Exception as e:
+            logger.error(f"{error_messages['CLASSIFICATION_FAILED']}: {e}")
+            raise
+            
+        return predicted_region_ids
 
-            return predicted_region_ids
+                

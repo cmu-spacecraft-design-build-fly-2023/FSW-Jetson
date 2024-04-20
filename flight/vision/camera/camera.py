@@ -8,12 +8,15 @@ from typing import List
 import numpy as np
 import threading 
 
-logging.basicConfig(
-    filename="camera_errors.log",
-    level=logging.ERROR,
-    format="%(asctime)s - Camera %(name)s - %(levelname)s - %(message)s",
-)
+#logging.basicConfig(
+#    filename="camera_errors.log",
+#    level=logging.ERROR,
+#    format="%(asctime)s - Camera %(name)s - %(levelname)s - %(message)s",
+#)
 
+from flight import Logger
+logger_instance = Logger(log_file='log/demo_system.log', log_level=logging.DEBUG)
+logger = logger_instance.get_logger()
 
 
 class CameraErrorCodes:
@@ -24,7 +27,6 @@ class CameraErrorCodes:
     CAMERA_NOT_OPERATIONAL = 1005
     CONFIGURATION_ERROR = 1006
     SUN_BLIND = 1007
-
 
 error_messages = {
     CameraErrorCodes.CAMERA_INITIALIZATION_FAILED: "Camera initialization failed.",
@@ -53,7 +55,7 @@ class Camera:
         try:
             config = self.load_config(config_path)
         except Exception as e:
-            logging.error(
+            logger.error(
                 f"{error_messages[CameraErrorCodes.CONFIGURATION_ERROR]}: {e}"
             )
             raise ValueError(error_messages[CameraErrorCodes.CONFIGURATION_ERROR])
@@ -81,7 +83,7 @@ class Camera:
 
     def log_error(self, error_code):
         message = error_messages.get(error_code, "Unknown error.")
-        logging.error(f"Camera {self.camera_id}: {message}")
+        logger.error(f"Camera {self.camera_id}: {message}")
 
     def initialize_camera(self):
         start_time = time.time()

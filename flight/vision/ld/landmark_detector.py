@@ -19,10 +19,29 @@ import numpy as np
 from ultralytics import YOLO
 import os
 import csv
-
+import logging
 
 LD_MODEL_SUF = "_nadir.pt"
 
+# Initialize Logger
+from flight import Logger
+logger_instance = Logger(log_file='log/demo_system.log', log_level=logging.DEBUG)
+logger = logger_instance.get_logger()
+
+# Define error and info messages
+error_messages = {
+    'CONFIGURATION_ERROR': "Configuration error.",
+    'LOADING_FAILED': "Failed to load necessary data.",
+    'DETECTION_FAILED': "Detection process failed.",
+    'INVALID_DIMENSIONS': "Invalid bounding box dimensions detected.",
+    'LOW_CONFIDENCE': "Skipping low confidence landmark."
+}
+
+info_messages = {
+    'INITIALIZATION_START': "Initializing LandmarkDetector.",
+    'DETECTION_START': "Starting the landmark detection process.",
+    'DETECTION_COMPLETE': "Landmark detection completed successfully."
+}
 
 class LandmarkDetector:
 
@@ -31,11 +50,17 @@ class LandmarkDetector:
         Initialize the LandmarkDetector with a specific region ID and model path
         The YOLO object is created with the path to a specific pretrained model
         """
+        logger.info(info_messages['INITIALIZATION_START'])
+        
         self.region_id = region_id
-        self.model = YOLO(os.path.join(model_path, region_id, region_id + LD_MODEL_SUF))
-        self.ground_truth = self.load_ground_truth(
-            os.path.join(model_path, region_id, f"{region_id}_top_salient.csv")
-        )
+        try:
+            self.model = YOLO(os.path.join(model_path, region_id, f"{region_id}_nadir.pt"))
+            self.ground_truth = self.load_ground_truth(
+                os.path.join(model_path, region_id, f"{region_id}_top_salient.csv")
+            )
+        except Exception as e:
+            logger.error(f"{error_messages['LOADING_FAILED']}: {e}")
+            raise
 
     def load_ground_truth(self, ground_truth_path):
         """
@@ -48,20 +73,24 @@ class LandmarkDetector:
             list of tuples: Each tuple contains (top_left_lon, top_left_lat, bottom_right_lon, bottom_right_lat)
         """
         ground_truth = []
-        with open(ground_truth_path, "r") as csvfile:
-            csvreader = csv.reader(csvfile)
-            next(csvreader)  # Skip the header row
-            for row in csvreader:
-                ground_truth.append(
-                    (
-                        float(row[0]),
-                        float(row[1]),
-                        float(row[2]),
-                        float(row[3]),
-                        float(row[4]),
-                        float(row[5]),
+        try:
+            with open(ground_truth_path, "r") as csvfile:
+                csvreader = csv.reader(csvfile)
+                next(csvreader)  # Skip the header row
+                for row in csvreader:
+                    ground_truth.append(
+                        (
+                            float(row[0]),
+                            float(row[1]),
+                            float(row[2]),
+                            float(row[3]),
+                            float(row[4]),
+                            float(row[5]),
+                        )
                     )
-                )
+        except Exception as e:
+            logger.error(f"{error_messages['CONFIGURATION_ERROR']}: {e}")
+            raise
         return ground_truth
 
     def calculate_bounding_boxes(self, centroid_xy, landmark_wh):
@@ -197,54 +226,62 @@ class LandmarkDetector:
 
         The detection process filters out landmarks with low confidence scores (below 0.5) and invalid bounding box dimensions. It aims to provide a comprehensive set of data for each detected landmark, facilitating further analysis or processing.
         """
-        # Detect landmarks using the YOLO model
-        results = self.model(img)
-        landmark_list = []
+        logger.info(info_messages['DETECTION_START'])
 
-        # Process each detection result from the model
-        for result in results:
-            landmarks = result.boxes
+        centroid_xy, centroid_latlons, landmark_class = [], [], []
+        try:
+            # Detect landmarks using the YOLO model
+            results = self.model(img)
+            landmark_list = []
 
-            if landmarks:  # Sanity Check
-                # Iterate over each detected bounding box (landmark)
-                for landmark in landmarks:
-                    x, y, w, h = landmark.xywh[0]
-                    cls = landmark.cls[0].item()
-                    conf = landmark.conf[0].item()
+            # Process each detection result from the model
+            for result in results:
+                landmarks = result.boxes
 
-                    # Validate bounding box dimensions (e.g., non-negative)
-                    if w < 0 or h < 0:
-                        print("Invalid bounding box dimensions detected.")
-                        continue
+                if landmarks:  # Sanity Check
+                    # Iterate over each detected bounding box (landmark)
+                    for landmark in landmarks:
+                        x, y, w, h = landmark.xywh[0]
+                        cls = landmark.cls[0].item()
+                        conf = landmark.conf[0].item()
 
-                    # Validate confidence level (e.g., consider only high confidence detections)
-                    if conf < 0.5:  # Assuming 0.5 as a threshold for confidence
-                        print("Skipping low confidence landmark.")
-                        continue
+                        # Validate bounding box dimensions (e.g., non-negative)
+                        if w < 0 or h < 0:
+                            print("Invalid bounding box dimensions detected.")
+                            continue
 
-                    landmark_list.append(
-                        [
-                            int(x.item()),
-                            int(y.item()),
-                            cls,
-                            int(w.item()),
-                            int(h.item()),
-                        ]
-                    )
-            else:
-                return None, None, None
+                        # Validate confidence level (e.g., consider only high confidence detections)
+                        if conf < 0.5:  # Assuming 0.5 as a threshold for confidence
+                            print("Skipping low confidence landmark.")
+                            continue
 
-        landmark_arr = np.array(landmark_list)
+                        landmark_list.append(
+                            [
+                                int(x.item()),
+                                int(y.item()),
+                                cls,
+                                int(w.item()),
+                                int(h.item()),
+                            ]
+                        )
+                else:
+                    return None, None, None
 
-        # Extract centroid coordinates, class IDs, and dimensions (width and height)
-        centroid_xy = landmark_arr[:, :2]  # Centroid coordinates [x, y]
-        landmark_class = landmark_arr[:, 2].astype(int)  # Class IDs as integers
-        landmark_wh = landmark_arr[:, 3:5]  # Width and height [w, h]
+            landmark_arr = np.array(landmark_list)
 
-        # Calculate the top-left and bottom-right coordinates of the bounding boxes
-        self.calculate_bounding_boxes(centroid_xy, landmark_wh)
+            # Extract centroid coordinates, class IDs, and dimensions (width and height)
+            centroid_xy = landmark_arr[:, :2]  # Centroid coordinates [x, y]
+            landmark_class = landmark_arr[:, 2].astype(int)  # Class IDs as integers
+            landmark_wh = landmark_arr[:, 3:5]  # Width and height [w, h]
 
-        # Get bounding box lat/lon based on ground truth
-        centroid_latlons, corner_latlons = self.get_latlons(landmark_class)
+            # Calculate the top-left and bottom-right coordinates of the bounding boxes
+            self.calculate_bounding_boxes(centroid_xy, landmark_wh)
+
+            # Get bounding box lat/lon based on ground truth
+            centroid_latlons, corner_latlons = self.get_latlons(landmark_class)
+
+        except Exception as e:
+            logger.error(f"{error_messages['DETECTION_FAILED']}: {e}")
+            raise
 
         return centroid_xy, centroid_latlons, landmark_class
