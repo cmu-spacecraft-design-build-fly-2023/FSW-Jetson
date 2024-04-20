@@ -2,22 +2,14 @@ import cv2
 import os
 import yaml
 import time
+import hashlib
 from datetime import datetime
 import logging
 from typing import List
 import numpy as np
 import threading 
-
-#logging.basicConfig(
-#    filename="camera_errors.log",
-#    level=logging.ERROR,
-#    format="%(asctime)s - Camera %(name)s - %(levelname)s - %(message)s",
-#)
-
-from flight import Logger
-logger_instance = Logger(log_file='log/demo_system.log', log_level=logging.DEBUG)
+from flight import logger_instance
 logger = logger_instance.get_logger()
-
 
 class CameraErrorCodes:
     CAMERA_INITIALIZATION_FAILED = 1001
@@ -45,6 +37,23 @@ class Frame:
         self.camera_id = camera_id
         self.frame = frame
         self.timestamp = timestamp
+        self.frame_id = self.generate_frame_id(timestamp) # Generate ID by hashing the timestamp
+    
+    def generate_frame_id(self, timestamp):
+        """
+        Generates a unique frame ID using the hash of the timestamp.
+
+        Args:
+            timestamp (datetime): The timestamp associated with the frame.
+
+        Returns:
+            str: A hexadecimal string representing the hash of the timestamp.
+        """
+        # Convert the timestamp to string and encode it to bytes, then hash it
+        timestamp_str = str(timestamp)
+        hash_object = hashlib.sha1(timestamp_str.encode())  # Using SHA-1
+        frame_id = hash_object.hexdigest()
+        return frame_id[:16]  # Optionally still shorten if needed
 
     def save(self):
         pass

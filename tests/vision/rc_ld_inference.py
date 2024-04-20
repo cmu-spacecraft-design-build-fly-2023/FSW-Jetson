@@ -16,9 +16,11 @@ Date: [Creation or Last Update Date]
 """
 
 import os
-from test_RC_inference import run_rc_inference
-from test_LD_inference import run_ld_inference
+from RC_inference import run_rc_inference
+from LD_inference import run_ld_inference
+from flight.logger import logger_instance as logger
 
+logger.clear_log()
 
 class InferenceRunner:
     """

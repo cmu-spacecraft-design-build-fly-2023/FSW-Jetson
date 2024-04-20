@@ -1,8 +1,12 @@
 
-from camera.camera import CameraManager
+from camera.camera import CameraManager, Frame
+from flight.vision import MLPipeline, FrameProcessor
 import time
 import cv2
 import os
+from flight.logger import logger_instance as logger
+
+logger.clear_log()
 
 def read_image_from_path(camera_id):
         images_directory = f"captured_images/camera_{camera_id}"
@@ -22,12 +26,40 @@ def read_image_from_path(camera_id):
         cv2.destroyAllWindows() 
         return 
 
+def print_ml_frames(ml_frames):
+    # Counting using Counter from the collections module
+    camera_ids = [camera_id for _, camera_id in ml_frames]
+    camera_counts = Counter(camera_ids)
+
+    for camera_id, count in camera_counts.items():
+        print(f"Camera ID {camera_id} has {count} images processed for ML pipeline.")
+
+
+def print_pipeline_results(results):
+    """
+    Prints the results from the ML pipeline batch processing.
+
+    Args:
+        results (list of tuples): Each tuple contains a camera ID and a list of tuples,
+                                  each of which contains a region ID and a LandmarkDetectionResult object.
+    """
+    for camera_id, regions_and_landmarks in results:
+        for region, detection_result in regions_and_landmarks:
+            centroid_xy = detection_result.centroid_xy
+            centroid_latlons = detection_result.centroid_latlons
+            landmark_classes = detection_result.landmark_classes
+            print(
+                f"Camera {camera_id}: Region {region} Landmarks: {centroid_xy}, {centroid_latlons}, {landmark_classes}"
+            )
+
 def main():
     # provide camera IDs connected 
-    camera_ids = [0,2,4,6] 
+    camera_ids = [0] 
 
     # create camera manager  
     cm = CameraManager(camera_ids, "/home/riverflame/Spacecraft/FSW-Jetson/configuration/camera_configuration.yml")
+    processor = FrameProcessor()
+    pipeline = MLPipeline()
 
     # capture frames and store images of all cameras 
     cm.capture_frames()
@@ -40,21 +72,23 @@ def main():
     # get latest frames of all cameras connected
     # return a dictionary with key as camera ID and value as latest Frame class, refer camera.py for structure of frame class 
     latest_frames = cm.get_latest_frame()
-    for id in camera_ids:
-        frame = latest_frames[id]
-        print(frame.camera_id) # just an example on how to acess frame class
 
     # get all available frames 
-    all_frames = cm.get_available_frames()
+    #all_frames = cm.get_available_frames()
     # NOTE access same as prev function 
 
-    #show the latest image of specific camera 
-    read_image_from_path(0)
+    # Prepare the frames_with_ids list for the ML pipeline
+    frames_with_ids = []
+    for camera_id, frame_obj in latest_frames.items():
+        # Ensure that the frame_obj is an instance of Frame and has the necessary attributes
+        if isinstance(frame_obj, Frame) and hasattr(frame_obj, 'frame'):
+            frames_with_ids.append((frame_obj.frame, camera_id))
+    
+    ml_frames = processor.process_for_ml_pipeline(frames_with_ids)
+    result = pipeline.run_ml_pipeline_on_batch(ml_frames)
 
-
-
-
-
+    print_ml_frames(ml_frames)
+    print_pipeline_results(result)
 
 
 if __name__ == '__main__':

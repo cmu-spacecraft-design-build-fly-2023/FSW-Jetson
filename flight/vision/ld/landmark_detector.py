@@ -19,13 +19,11 @@ import numpy as np
 from ultralytics import YOLO
 import os
 import csv
-import logging
 
 LD_MODEL_SUF = "_nadir.pt"
 
 # Initialize Logger
-from flight import Logger
-logger_instance = Logger(log_file='log/demo_system.log', log_level=logging.DEBUG)
+from flight import logger_instance
 logger = logger_instance.get_logger()
 
 # Define error and info messages
@@ -34,7 +32,8 @@ error_messages = {
     'LOADING_FAILED': "Failed to load necessary data.",
     'DETECTION_FAILED': "Detection process failed.",
     'INVALID_DIMENSIONS': "Invalid bounding box dimensions detected.",
-    'LOW_CONFIDENCE': "Skipping low confidence landmark."
+    'LOW_CONFIDENCE': "Skipping low confidence landmark.",
+    'EMPTY_DETECTION': "No landmark detected."
 }
 
 info_messages = {
@@ -50,7 +49,7 @@ class LandmarkDetector:
         Initialize the LandmarkDetector with a specific region ID and model path
         The YOLO object is created with the path to a specific pretrained model
         """
-        logger.info(info_messages['INITIALIZATION_START'])
+        logger.info(f"Initializing LandmarkDetector for region {region_id}.")
         
         self.region_id = region_id
         try:
@@ -196,6 +195,8 @@ class LandmarkDetector:
 
         landmark_arr = np.array(landmark_list)
 
+        print(f"landmark array dimention: {landmark_arr.ndim}")
+
         # Extract centroid coordinates, class IDs, and dimensions (width and height)
         centroid_xy = landmark_arr[:, :2]  # Centroid coordinates [x, y]
         landmark_class = landmark_arr[:, 2].astype(int)  # Class IDs as integers
@@ -209,7 +210,7 @@ class LandmarkDetector:
 
         return centroid_xy, corner_xy, centroid_latlons, corner_latlons, landmark_class
 
-    def detect_landmarks(self, img):
+    def detect_landmarks(self, frame_obj):
         """
         Detects landmarks in an input image using a pretrained YOLO model and extracts relevant information.
 
@@ -226,12 +227,12 @@ class LandmarkDetector:
 
         The detection process filters out landmarks with low confidence scores (below 0.5) and invalid bounding box dimensions. It aims to provide a comprehensive set of data for each detected landmark, facilitating further analysis or processing.
         """
-        logger.info(info_messages['DETECTION_START'])
+        logger.info(f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {info_messages['DETECTION_START']}")
 
         centroid_xy, centroid_latlons, landmark_class = [], [], []
         try:
             # Detect landmarks using the YOLO model
-            results = self.model(img)
+            results = self.model(frame_obj.frame)
             landmark_list = []
 
             # Process each detection result from the model
@@ -265,9 +266,15 @@ class LandmarkDetector:
                             ]
                         )
                 else:
+                    logger.info(f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {error_messages['EMPTY_DETECTION']}")
                     return None, None, None
 
+            if len(landmark_list) == 0:
+                logger.info(f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {error_messages['EMPTY_DETECTION']}")
+                return None, None, None
+
             landmark_arr = np.array(landmark_list)
+            print(f"landmark array dimention: {landmark_arr.ndim}")
 
             # Extract centroid coordinates, class IDs, and dimensions (width and height)
             centroid_xy = landmark_arr[:, :2]  # Centroid coordinates [x, y]
@@ -284,4 +291,5 @@ class LandmarkDetector:
             logger.error(f"{error_messages['DETECTION_FAILED']}: {e}")
             raise
 
+        logger.info(f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {len(landmark_list)} landmarks detected.")
         return centroid_xy, centroid_latlons, landmark_class

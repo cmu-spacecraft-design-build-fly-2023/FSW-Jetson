@@ -14,17 +14,17 @@ Date: [Creation or Last Update Date]
 
 import os
 import yaml
+import cv2
+from PIL import Image
 import torch
 import torch.nn.functional as F
 from torchvision import transforms
 from efficientnet_pytorch import EfficientNet
-import logging
 
 LD_MODEL_SUF = ".pth"
 NUM_CLASS = 15
 
-from flight import Logger
-logger_instance = Logger(log_file='log/demo_system.log', log_level=logging.DEBUG)
+from flight import logger_instance
 logger = logger_instance.get_logger()
 
 # Define error and info messages
@@ -116,39 +116,6 @@ class RegionClassifier:
 
         return region_ids
 
-    def classify_region(self, img):
-        """
-        Classifies a single image into one of the predefined regions.
-
-        Parameters:
-            img (PIL.Image): The input image to classify.
-
-        Returns:
-            tuple: A tuple containing two lists; the first list contains the class IDs with probabilities
-            above a threshold, and the second list contains the corresponding probabilities.
-        """
-        img = self.transforms(img).unsqueeze(0)  # Add batch dimension
-        img = img.to(self.device)
-
-        with torch.no_grad():
-            outputs = self.model(img)
-            probabilities = F.softmax(
-                outputs, dim=1
-            )  # Apply softmax to convert to probabilities
-            # _, predicted = torch.max(probabilities, 1)  # Get the class with the highest probability
-
-            # Filter classes with probabilities greater than a threshold (close to zero)
-            threshold = 1e-6  # Small threshold to account for floating-point precision
-            probs_mask = probabilities > threshold
-            probs = probabilities[probs_mask]
-            classes = torch.arange(probabilities.size(1))[probs_mask.squeeze()]
-
-            # Convert to lists for easier handling outside PyTorch
-            probs_list = probs.squeeze().tolist()
-            classes_list = classes.tolist()
-
-            return classes_list, probs_list
-
     def classify_region_ids(self, img):
         """
         Classifies a single image into one of the predefined regions.
@@ -188,7 +155,52 @@ class RegionClassifier:
         except Exception as e:
             logger.error(f"{error_messages['CLASSIFICATION_FAILED']}: {e}")
             raise
-            
+
         return predicted_region_ids
 
+    def classify_region(self, frame_obj):
+        """
+        Classifies a single image into one of the predefined regions.
+
+        Parameters:
+            img (PIL.Image): The input image to classify.
+
+        Returns:
+            tuple: A tuple containing two lists; the first list contains the class IDs with probabilities
+            above a threshold, and the second list contains the corresponding probabilities.
+        """
+        # Logging the classification start with timestamp information
+        logger.info(f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {info_messages['CLASSIFICATION_START']}")
+        predicted_region_ids = []
+        
+        try:
+            img = Image.fromarray(cv2.cvtColor(frame_obj.frame, cv2.COLOR_BGR2RGB))
+            img = self.transforms(img).unsqueeze(0)  # Add batch dimension
+            img = img.to(self.device)
+
+            with torch.no_grad():
+                outputs = self.model(img)
+                probabilities = F.softmax(
+                    outputs, dim=1
+                )  # Apply softmax to convert to probabilities
+                # _, predicted = torch.max(probabilities, 1)  # Get the class with the highest probability
+
+                # Filter classes with probabilities greater than a threshold (close to zero)
+                threshold = 1e-6  # Small threshold to account for floating-point precision
+                probs_mask = probabilities > threshold
+                probs = probabilities[probs_mask]
+                classes = torch.arange(probabilities.size(1))[probs_mask.squeeze()]
+
+                # Convert to lists for easier handling outside PyTorch
+                probs.squeeze().tolist()
+                classes_list = classes.tolist()
+
+                predicted_region_ids = [self.region_ids[index] for index in classes_list]
                 
+        except Exception as e:
+            logger.error(f"{error_messages['CLASSIFICATION_FAILED']}: {e}")
+            raise
+
+        logger.info(f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {predicted_region_ids} region(s) identified.")
+        return predicted_region_ids
+
