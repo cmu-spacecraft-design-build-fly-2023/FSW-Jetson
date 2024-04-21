@@ -1,3 +1,13 @@
+"""
+Payload Command Queue
+
+Description: Contains the PriorityCommandQueue class that manages the queue of tasks to be executed by the Payload. 
+
+Author: Ibrahima S. Sow
+Date: [Creation or Last Update Date]
+"""
+
+
 import queue
 import threading
 import time
