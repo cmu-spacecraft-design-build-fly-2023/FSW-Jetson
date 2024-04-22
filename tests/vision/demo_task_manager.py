@@ -1,12 +1,12 @@
 
-from camera.camera import CameraManager, Frame
+from flight.vision.camera import CameraManager, Frame
 from flight.vision import MLPipeline, FrameProcessor
 import time
 import cv2
 import os
-from flight.logger import logger_instance as logger
-
-logger.clear_log()
+from flight import Logger
+Logger.clear_log()
+logger = Logger.get_logger()
 
 def read_image_from_path(camera_id):
         images_directory = f"captured_images/camera_{camera_id}"
@@ -26,22 +26,29 @@ def read_image_from_path(camera_id):
         cv2.destroyAllWindows() 
         return 
 
-def print_pipeline_results(results):
+def save_frame(frame_obj, output_dir='inference_output'):
     """
-    Prints the results from the ML pipeline batch processing.
+    Saves an image frame to a specified directory with the naming convention 'frame_{frame_id}.jpg'.
 
-    Args:
-        results (list of tuples): Each tuple contains a camera ID and a list of tuples,
-                                  each of which contains a region ID and a LandmarkDetectionResult object.
+    Parameters:
+        frame_obj (Frame): The frame object containing the image and frame ID.
+        output_dir (str): Directory where the frame should be saved.
     """
-    for camera_id, regions_and_landmarks in results:
-        for region, detection_result in regions_and_landmarks:
-            centroid_xy = detection_result.centroid_xy
-            centroid_latlons = detection_result.centroid_latlons
-            landmark_classes = detection_result.landmark_classes
-            print(
-                f"Camera {camera_id}: Region {region} Landmarks: {centroid_xy}, {centroid_latlons}, {landmark_classes}"
-            )
+    # Ensure the output directory exists, if not, create it
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    # Frame object should have an attribute 'frame_id' and 'frame' which contains the image data
+    if hasattr(frame_obj, 'frame_id') and hasattr(frame_obj, 'frame'):
+        # Assuming frame_obj.frame is a numpy array and needs conversion to an image
+        image = Image.fromarray(frame_obj.frame)
+        # Define the path to save the image
+        file_path = os.path.join(output_dir, f'frame_{frame_obj.frame_id}.jpg')
+        # Save the image
+        image.save(file_path)
+        print(f"Saved: {file_path}")
+    else:
+        print("Error: frame_obj does not have the required attributes.")
 
 def draw_landmarks_and_save(frame_obj, regions_and_landmarks, save_dir):
     """
@@ -96,7 +103,7 @@ def main():
     camera_ids = [0] 
 
     # create camera manager  
-    cm = CameraManager(camera_ids, "/home/riverflame/Spacecraft/FSW-Jetson/configuration/camera_configuration.yml")
+    cm = CameraManager(camera_ids, "/home/argus-1/Spacecraft/FSW-Jetson/configuration/camera_configuration.yml")
     processor = FrameProcessor()
     pipeline = MLPipeline()
 
@@ -123,11 +130,11 @@ def main():
         # Ensure that the frame_obj is an instance of Frame and has the necessary attributes
         if isinstance(frame_obj, Frame) and hasattr(frame_obj, 'frame'):
             latest_frames.append(frame_obj)
+            save_frame(frame_obj)
     
     ml_frames = processor.process_for_ml_pipeline(latest_frames)
 
     for frame_obj in ml_frames:
-        logger.info("reached here")
         regions_and_landmarks = pipeline.run_ml_pipeline_on_single(frame_obj)
         if regions_and_landmarks:
             # Assuming you have a Frame object and some regions and landmarks processed

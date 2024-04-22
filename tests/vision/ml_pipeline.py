@@ -28,7 +28,6 @@ import datetime
 from flight import Logger
 Logger.clear_log()
 logger = Logger.get_logger()
-logger.info("This is an info message")
 
 def get_latest_frame(image_dir):
     frame_objects = {}
