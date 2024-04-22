@@ -15,8 +15,8 @@ from PIL import Image
 import cv2
 from flight.vision.rc import RegionClassifier
 from flight.vision.ld import LandmarkDetector
-from flight import logger_instance
-logger = logger_instance.get_logger()
+from flight import Logger
+logger = Logger.get_logger()
 
 class Landmark:
     """

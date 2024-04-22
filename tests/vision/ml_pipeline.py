@@ -18,21 +18,26 @@ from collections import Counter
 from flight.vision.camera import Frame
 from flight.vision import MLPipeline, FrameProcessor
 from fake_camera_feed import FakeCameraFeed
-from flight.logger import logger_instance as logger
+#from flight.logger import logger_instance as logger
 import os
 import cv2
 import datetime
 
-logger.clear_log()
+#logger.clear_log()
+
+from flight import Logger
+Logger.clear_log()
+logger = Logger.get_logger()
+logger.info("This is an info message")
 
 def get_latest_frame(image_dir):
     frame_objects = {}
     # List all files in the directory and filter out non-jpg files
-    all_files = [f for f in os.listdir(image_dir) if f.endswith('.jpg')]
+    all_files = [f for f in os.listdir(image_dir) if f.endswith('.png')]
     # Optionally sort files if they are not in the desired order
     all_files.sort()
     # Process only the top five images
-    top_files = all_files[:50]
+    top_files = all_files[:6]
 
     for i, filename in enumerate(top_files):
         image_path = os.path.join(image_dir, filename)
@@ -120,7 +125,7 @@ def draw_landmarks_and_save(frame_obj, regions_and_landmarks, save_dir):
     print(f"Saved: {save_path}")
 
 if __name__ == "__main__":
-    image_dir = "tests/vision/data/full_inference/img"
+    image_dir = "/home/riverflame/Spacecraft/FSW-Jetson/tests/vision/data/RC_testdata2"
 
     processor = FrameProcessor()
     pipeline = MLPipeline()
@@ -131,10 +136,11 @@ if __name__ == "__main__":
         # Ensure that the frame_obj is an instance of Frame and has the necessary attributes
         if isinstance(frame_obj, Frame) and hasattr(frame_obj, 'frame'):
             latest_frames.append(frame_obj)
-
+    
     ml_frames = processor.process_for_ml_pipeline(latest_frames)
 
     for frame_obj in ml_frames:
+        logger.info("reached here")
         regions_and_landmarks = pipeline.run_ml_pipeline_on_single(frame_obj)
         if regions_and_landmarks:
             # Assuming you have a Frame object and some regions and landmarks processed

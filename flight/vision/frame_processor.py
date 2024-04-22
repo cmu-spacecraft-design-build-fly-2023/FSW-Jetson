@@ -12,8 +12,8 @@ Date: [Creation or Last Update Date]
 
 import cv2
 import numpy as np
-from flight import logger_instance
-logger = logger_instance.get_logger()
+from flight import Logger
+logger = Logger.get_logger()
 
 # Define error messages
 error_messages = {

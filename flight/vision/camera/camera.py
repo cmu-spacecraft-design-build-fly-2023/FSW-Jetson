@@ -8,8 +8,9 @@ import logging
 from typing import List
 import numpy as np
 import threading 
-from flight import logger_instance
-logger = logger_instance.get_logger()
+
+from flight import Logger
+logger = Logger.get_logger()
 
 class CameraErrorCodes:
     CAMERA_INITIALIZATION_FAILED = 1001

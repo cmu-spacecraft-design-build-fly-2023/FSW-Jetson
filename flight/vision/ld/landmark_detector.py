@@ -23,8 +23,8 @@ import csv
 LD_MODEL_SUF = "_nadir.pt"
 
 # Initialize Logger
-from flight import logger_instance
-logger = logger_instance.get_logger()
+from flight import Logger
+logger = Logger.get_logger()
 
 # Define error and info messages
 error_messages = {
@@ -227,6 +227,7 @@ class LandmarkDetector:
 
         The detection process filters out landmarks with low confidence scores (below 0.5) and invalid bounding box dimensions. It aims to provide a comprehensive set of data for each detected landmark, facilitating further analysis or processing.
         """
+        #logger.info(f"[Camera {frame_obj.camera_id} frame {BLUE}{frame_obj.frame_id}{ENDC}] {info_messages['DETECTION_START']}")
         logger.info(f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {info_messages['DETECTION_START']}")
 
         centroid_xy, centroid_latlons, landmark_class = [], [], []
@@ -292,4 +293,17 @@ class LandmarkDetector:
             raise
 
         logger.info(f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {len(landmark_list)} landmarks detected.")
+
+        # Logging details for each detected landmark
+        if landmark_arr.size > 0:
+            logger.info(f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] class\tcentroid_xy\tcentroid_latlons")
+            for i in range(len(landmark_list)):
+                cls = int(landmark_arr[i, 2])  # Class ID, convert to int for cleaner logging
+                x, y = int(landmark_arr[i, 0]), int(landmark_arr[i, 1])  # Centroid coordinates, convert to int for cleaner logging
+                lat, lon = centroid_latlons[i]  # Lat/Lon coordinates, assume these are already unpacked correctly
+                # Format lat and lon to two decimal places
+                formatted_lat = f"{lat:.2f}"
+                formatted_lon = f"{lon:.2f}"
+                logger.info(f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {cls}\t({x}, {y})\t({formatted_lat}, {formatted_lon})")
+
         return centroid_xy, centroid_latlons, landmark_class
