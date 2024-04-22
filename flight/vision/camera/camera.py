@@ -218,7 +218,6 @@ class Camera:
 
                     break
                 if cv2.waitKey(1) & 0xFF == ord("q"):
-                if cv2.waitKey(1) & 0xFF == ord("q"):
                     break
             self.cap.release()
             cv2.destroyAllWindows()

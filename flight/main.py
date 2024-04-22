@@ -5,9 +5,9 @@ Author: Ibrahima S. Sow
 Date: [Creation or Last Update Date]
 """
 
-from flight.payload import PayloadManager
+from flight.payload import Payload
 
 if __name__ == "__main__":
 
-    payload = PayloadManager()
+    payload = Payload()
     payload.run()

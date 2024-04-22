@@ -40,15 +40,18 @@ class Task:
                 # TODO Error message must be logged here and sent to a monitoring system / Argus
                 return None
             
-        
-
-class PriorityCommandQueue:
+class CommandQueue:
     def __init__(self):
-        self.queue = queue.PriorityQueue()
+        self._queue = queue.PriorityQueue()
         self.paused = False
         self.lock = threading.Lock()
 
-    def enqueue(self, task):
+
+    @property
+    def queue(self):
+        return self._queue
+
+    def add_task(self, task):
         """Add a task to the queue with priority."""
         with self.lock:
             if not self.paused:
@@ -56,15 +59,19 @@ class PriorityCommandQueue:
             else:
                 print("Queue is paused. Task not added.")
 
-    def dequeue(self):
+    def get_next_task(self):
         """Remove and return a task from the queue based on priority."""
         with self.lock:
-            if not self.queue.empty() and not self.paused:
+            if self.paused:
+                print("Queue is paused.")
+                return None
+            elif self.queue.empty():
+                print("Queue is empty.")
+                return None
+            else:
                 _, _, task = self.queue.get()
                 return task
-            else:
-                print("Queue is paused or empty.")
-                return None
+
 
     def pause(self):
         """Pause the queue operations."""
@@ -110,19 +117,19 @@ if __name__ == "__main__":
         else:
             print("No error occurred.")
 
-    command_queue = PriorityCommandQueue()
+    command_queue = CommandQueue()
 
     task1 = Task(1, print_message, "Hello, World!", 50)
     task2 = Task(2, print_message, "Goodbye, World!", 10)
     task3 = Task(3, throw_random_error, "Testing random error", 75)
 
-    command_queue.enqueue(task1)
-    command_queue.enqueue(task2)
-    command_queue.enqueue(task3)
+    command_queue.add_task(task1)
+    command_queue.add_task(task2)
+    command_queue.add_task(task3)
 
     command_queue.print_all_tasks()
 
     while not command_queue.is_empty():
-        task = command_queue.dequeue()
+        task = command_queue.get_next_task()
         task.execute()
         time.sleep(1)

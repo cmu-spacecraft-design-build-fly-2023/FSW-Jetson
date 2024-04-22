@@ -7,8 +7,25 @@ Author: Ibrahima S. Sow
 Date: [Creation or Last Update Date]
 """
 
+import random # FOR DEBUGGING
+
 # TODO - fill in functions
 # TODO - Fill in the functions with the correct parameters and return types
+
+
+# Debug
+def debug_hello(payload):
+    print("Hello from the payload!")
+    
+def debug_random_error(payload):
+    if random.random() < 0.7:
+        raise Exception("Random error occurred!")
+    else:
+        print("No error occurred.")
+
+def debug_goodbye(payload):
+    print("Goodbye from the payload!")
+
 
 # Time
 
