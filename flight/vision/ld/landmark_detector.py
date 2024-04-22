@@ -234,7 +234,8 @@ class LandmarkDetector:
         try:
             # Detect landmarks using the YOLO model
             #results = self.model(frame_obj.frame)
-            results = self.model.predict(frame_obj.frame, conf=0.7, imgsz=(1080,1920), verbose=False)
+            img = Image.fromarray(cv2.cvtColor(frame_obj.frame, cv2.COLOR_BGR2RGB))
+            results = self.model.predict(img, conf=0.7, imgsz=(1080,1920), verbose=False)
             landmark_list = []
 
             # Process each detection result from the model
