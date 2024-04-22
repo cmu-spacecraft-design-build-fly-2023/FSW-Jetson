@@ -7,19 +7,23 @@ Author: Ibrahima S. Sow
 Date: [Creation or Last Update Date]
 """
 
-# MODES
+from enum import Enum, unique
 
-STARTUP = 0x00
-NOMINAL = 0x01
-LOW_POWER = 0x02
-SAFE_MODE = 0x03
-CRITICAL = 0x04
+# PAYLOAD STATES
+@unique
+class PAYLOAD_STATE(Enum):
+    STARTUP = 0x00
+    NOMINAL = 0x01
+    LOW_POWER = 0x02
+    SAFE_MODE = 0x03
+    CRITICAL = 0x04
+
 
 
 class PayloadManager:
 
     def __init__(self):
-        self.mode = STARTUP
+        self.mode = PAYLOAD_STATE.STARTUP
 
     def run_debug(self):
         pass

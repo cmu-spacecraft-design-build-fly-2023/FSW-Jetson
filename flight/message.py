@@ -15,6 +15,13 @@ Date: [Creation or Last Update Date]
 SYNCHRONIZE_TIME = 0x00
 REQUEST_TIME = 0x01
 
+# Debug
+
+
+
+
+
+
 
 # Payload Control
 REQUEST_PAYLOAD_STATE = 0x20
@@ -24,8 +31,6 @@ RESTART_PAYLOAD = 0x23
 # SHUTDOWN_PAYLOAD = 0x24
 REQUEST_LOGS_FROM_LAST_X_SECONDS = 0x25 # Payload sends logs from the last X seconds in payload
 DELETE_ALL_LOGS = 0x26
-
-
 
 
 
@@ -58,9 +63,6 @@ REQUEST_LAST_OBSERVATIONS_FILE = 0x45
 
 
 
-
-
-
 # Attitude and Orbit Estimation
 
 
@@ -71,6 +73,7 @@ REQUEST_ORBIT_ESTIMATE = 0x53
 RESOLVE_STATE = 0x54 # Payload simulate forward to current time (prediction)
 REQUEST_LAST_AOD_ESTIMATE_LOGS = 0x55
 RUN_ATTITUDE_AND_ORBIT_ESTIMATION = 0x56
+REQUEST_ATTITUDE_STAR_TRACKER = 0x57
 
 
 
