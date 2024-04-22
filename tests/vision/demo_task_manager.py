@@ -4,6 +4,7 @@ from flight.vision import MLPipeline, FrameProcessor
 import time
 import cv2
 import os
+from PIL import Image
 from flight import Logger
 Logger.clear_log()
 logger = Logger.get_logger()
@@ -103,7 +104,7 @@ def main():
     camera_ids = [0] 
 
     # create camera manager  
-    cm = CameraManager(camera_ids, "/home/argus-1/Spacecraft/FSW-Jetson/configuration/camera_configuration.yml")
+    cm = CameraManager(camera_ids, "/home/argus-1/FSW-Jetson/configuration/camera_configuration.yml")
     processor = FrameProcessor()
     pipeline = MLPipeline()
 
@@ -125,7 +126,6 @@ def main():
 
     # Prepare the frames_with_ids list for the ML pipeline
     latest_frames = []
-    latest_frames_w_id = get_latest_frame(image_dir)
     for camera_id, frame_obj in latest_frames_w_id.items():
         # Ensure that the frame_obj is an instance of Frame and has the necessary attributes
         if isinstance(frame_obj, Frame) and hasattr(frame_obj, 'frame'):
