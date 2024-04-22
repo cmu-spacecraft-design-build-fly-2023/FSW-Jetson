@@ -87,6 +87,8 @@ class Camera:
         self._current_frame = None
         self.all_frames = []
 
+        logger.info(f"Camera {camera_id}: Initialized with settings {self.camera_settings}")
+
     def load_config(self, config_path):
         with open(config_path, "r") as file:
             return yaml.safe_load(file)
@@ -106,6 +108,7 @@ class Camera:
             if elapsed_time <= self.max_startup_time:
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.resolution[0])
                 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.resolution[1])
+                logger.info(f"Camera {self.camera_id}: Successfully initialized within {self.max_startup_time} ms")
                 return 1
             else:
                 print(
@@ -137,9 +140,7 @@ class Camera:
                 if ret:
                     if not self.is_blinded_by_sun(frame):
                         timestamp = datetime.now()
-                        print(
-                            f"Frame captured from camera {self.camera_id} at {timestamp}"
-                        )
+                        logger.info(f"Camera {self.camera_id}: Frame captured at {timestamp}")
                         self.current_frame = Frame(frame, self.camera_id, timestamp)
                         self.save_image(self.current_frame)
                         self.all_frames.append(self.current_frame)
@@ -206,7 +207,7 @@ class Camera:
         ts = target_frame.timestamp
         image_name = f"{self.image_folder}/{ts}.jpg"
         cv2.imwrite(image_name,frame)
-        print(f"image stored of camera {self.camera_id} at {ts}")
+        logger.info(f"Camera {self.camera_id}: Image saved as {image_name}")
         self._maintain_image_limit(self.image_folder, 50)
     
     def _maintain_image_limit(self, directory_path, limit=50):
@@ -264,6 +265,7 @@ class CameraManager:
         }
         number_of_cameras = len(self.cameras)
         self.camera_frames = []
+        logger.info(f"Camera Manager initialized.")
 
     def capture_frames(self):
         """
