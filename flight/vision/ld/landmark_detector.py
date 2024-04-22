@@ -19,6 +19,7 @@ import numpy as np
 from ultralytics import YOLO
 import os
 import csv
+from PIL import Image
 
 LD_MODEL_SUF = "_nadir.pt"
 

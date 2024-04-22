@@ -111,9 +111,8 @@ class RegionClassifier:
 
             with torch.no_grad():
                 outputs = self.model(img)
-                #probabilities = torch.sigmoid(outputs)  # Adjust this if your model uses softmax
-                #predicted = (probabilities > 0.55).float()
-                predicted = (outputs > 0.55).float().squeeze().tolist()
+                probabilities = torch.sigmoid(outputs)  
+                predicted = (probabilities > 0.55).float()
                 predicted_indices = predicted.nonzero(as_tuple=True)[1]
                 predicted_region_ids = [self.region_ids[idx] for idx in predicted_indices]
 
