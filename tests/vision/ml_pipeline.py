@@ -17,17 +17,19 @@ Date: [Creation or Last Update Date]
 from collections import Counter
 from flight.vision.camera import Frame
 from flight.vision import MLPipeline, FrameProcessor
-from fake_camera_feed import FakeCameraFeed
-#from flight.logger import logger_instance as logger
+from flight import Logger
 import os
 import cv2
+import sys
 import datetime
+import logging
 
-#logger.clear_log()
+# Configure and initialize logger for demo
+Logger.configure(log_file='log/demo_system.log', log_level=logging.DEBUG)
+Logger.initialize_log(module_name=sys.modules[__name__], init_msg="Logger purpose: To capture all operational logs for debugging and monitoring system performance.")
 
-from flight import Logger
-Logger.clear_log()
-logger = Logger.get_logger()
+Logger.log('ERROR', "This is an error message.")
+
 
 def get_latest_frame(image_dir):
     frame_objects = {}
@@ -36,7 +38,7 @@ def get_latest_frame(image_dir):
     # Optionally sort files if they are not in the desired order
     all_files.sort()
     # Process only the top five images
-    top_files = all_files[:6]
+    top_files = all_files[:1]
 
     for i, filename in enumerate(top_files):
         image_path = os.path.join(image_dir, filename)
@@ -48,32 +50,6 @@ def get_latest_frame(image_dir):
         else:
             print(f"Failed to read image from {image_path}")
     return frame_objects
-
-def print_ml_frames(ml_frames):
-    # Counting using Counter from the collections module
-    camera_ids = [camera_id for _, camera_id in ml_frames]
-    camera_counts = Counter(camera_ids)
-
-    for camera_id, count in camera_counts.items():
-        print(f"Camera ID {camera_id} has {count} images processed for ML pipeline.")
-
-
-def print_pipeline_results(results):
-    """
-    Prints the results from the ML pipeline batch processing.
-
-    Args:
-        results (list of tuples): Each tuple contains a camera ID and a list of tuples,
-                                  each of which contains a region ID and a LandmarkDetectionResult object.
-    """
-    for camera_id, regions_and_landmarks in results:
-        for region, detection_result in regions_and_landmarks:
-            centroid_xy = detection_result.centroid_xy
-            centroid_latlons = detection_result.centroid_latlons
-            landmark_classes = detection_result.landmark_classes
-            print(
-                f"Camera {camera_id}: Region {region} Landmarks: {centroid_xy}, {centroid_latlons}, {landmark_classes}"
-            )
 
 def draw_landmarks_and_save(frame_obj, regions_and_landmarks, save_dir):
     """
@@ -124,8 +100,7 @@ def draw_landmarks_and_save(frame_obj, regions_and_landmarks, save_dir):
     print(f"Saved: {save_path}")
 
 if __name__ == "__main__":
-    image_dir = "/home/riverflame/Spacecraft/FSW-Jetson/tests/vision/data/RC_testdata2"
-
+    image_dir = "/home/riverflame/Spacecraft/FSW-Jetson/tests/vision/data/12R"
     processor = FrameProcessor()
     pipeline = MLPipeline()
 
@@ -139,7 +114,6 @@ if __name__ == "__main__":
     ml_frames = processor.process_for_ml_pipeline(latest_frames)
 
     for frame_obj in ml_frames:
-        logger.info("reached here")
         regions_and_landmarks = pipeline.run_ml_pipeline_on_single(frame_obj)
         if regions_and_landmarks:
             # Assuming you have a Frame object and some regions and landmarks processed

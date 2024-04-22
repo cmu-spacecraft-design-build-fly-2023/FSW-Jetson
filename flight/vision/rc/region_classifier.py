@@ -19,9 +19,7 @@ import torch
 import torch.nn as nn
 from torchvision import models, transforms
 from PIL import Image
-
 from flight import Logger
-logger = Logger.get_logger()
 
 LD_MODEL_SUF = ".pth"
 NUM_CLASS = 16
@@ -59,8 +57,8 @@ class SpacecraftClassifierEfficient(nn.Module):
         return x
 
 class RegionClassifier:
-    def __init__(self):
-        logger.info(info_messages['INITIALIZATION_START'])
+    def __init__(self): 
+        Logger.log('INFO', info_messages['INITIALIZATION_START'])
 
         model_path, config_path = self.construct_paths()
 
@@ -72,10 +70,11 @@ class RegionClassifier:
             model_weights_path = os.path.join(model_path, "model_effnet_0.997_acc" + LD_MODEL_SUF)
             self.model.load_state_dict(torch.load(model_weights_path, map_location=self.device))
             self.model.eval()
-            logger.info(info_messages['MODEL_LOADED'])
+            Logger.log('INFO', info_messages['MODEL_LOADED'])
+            
 
         except Exception as e:
-            logger.error(f"{error_messages['MODEL_LOADING_FAILED']}: {e}")
+            Logger.log('ERROR', f"{error_messages['MODEL_LOADING_FAILED']}: {e}")
             raise
 
         # Define the preprocessing
@@ -98,11 +97,11 @@ class RegionClassifier:
                 config = yaml.safe_load(file)
             return config.get("region_ids", [])
         except Exception as e:
-            logger.error(f"{error_messages['CONFIGURATION_ERROR']}: {e}")
+            Logger.log('ERROR', f"{error_messages['CONFIGURATION_ERROR']}: {e}")
             raise
 
     def classify_region(self, frame_obj):
-        logger.info(f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {info_messages['CLASSIFICATION_START']}")
+        Logger.log('INFO', f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {info_messages['CLASSIFICATION_START']}")
         predicted_region_ids = []
 
         try:
@@ -117,9 +116,9 @@ class RegionClassifier:
                 predicted_region_ids = [self.region_ids[idx] for idx in predicted_indices]
 
         except Exception as e:
-            logger.error(f"{error_messages['CLASSIFICATION_FAILED']}: {e}")
+            Logger.log('ERROR', f"{error_messages['CLASSIFICATION_FAILED']}: {e}")
             raise
 
-        logger.info(f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {predicted_region_ids} region(s) identified.")
+        Logger.log('INFO', f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {predicted_region_ids} region(s) identified.")
         return predicted_region_ids
 

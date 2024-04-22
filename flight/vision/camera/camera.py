@@ -8,9 +8,7 @@ import logging
 from typing import List
 import numpy as np
 import threading 
-
 from flight import Logger
-logger = Logger.get_logger()
 
 class CameraErrorCodes:
     CAMERA_INITIALIZATION_FAILED = 1001
@@ -31,7 +29,6 @@ error_messages = {
     CameraErrorCodes.CONFIGURATION_ERROR: "Configuration error.",
     CameraErrorCodes.CONFIGURATION_ERROR: "Configuration error.",
 }
-
 
 class Frame:
     def __init__(self, frame, camera_id, timestamp):
@@ -65,9 +62,7 @@ class Camera:
         try:
             config = self.load_config(config_path)
         except Exception as e:
-            logger.error(
-                f"{error_messages[CameraErrorCodes.CONFIGURATION_ERROR]}: {e}"
-            )
+            Logger.log('ERROR', f"{error_messages[CameraErrorCodes.CONFIGURATION_ERROR]}: {e}")
             raise ValueError(error_messages[CameraErrorCodes.CONFIGURATION_ERROR])
 
         self.stop_event = threading.Event()
@@ -87,7 +82,7 @@ class Camera:
         self._current_frame = None
         self.all_frames = []
 
-        logger.info(f"Camera {camera_id}: Initialized with settings {self.camera_settings}")
+        Logger.log('INFO', f"Camera {camera_id}: Initialized with settings {self.camera_settings}")
 
     def load_config(self, config_path):
         with open(config_path, "r") as file:
@@ -95,7 +90,7 @@ class Camera:
 
     def log_error(self, error_code):
         message = error_messages.get(error_code, "Unknown error.")
-        logger.error(f"Camera {self.camera_id}: {message}")
+        Logger.log('ERROR', f"Camera {self.camera_id}: {message}")
 
     def initialize_camera(self):
         start_time = time.time()
@@ -108,12 +103,10 @@ class Camera:
             if elapsed_time <= self.max_startup_time:
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.resolution[0])
                 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.resolution[1])
-                logger.info(f"Camera {self.camera_id}: Successfully initialized within {self.max_startup_time} ms")
+                Logger.log('INFO', f"Camera {self.camera_id}: Successfully initialized within {self.max_startup_time} ms")
                 return 1
             else:
-                print(
-                    f"Camera {self.camera_id} initialization exceeded {self.max_startup_time} milliseconds."
-                )
+                Logger.log('ERROR', f"Camera {self.camera_id} initialization exceeded {self.max_startup_time} milliseconds.")
                 self.log_error(CameraErrorCodes.CAMERA_INITIALIZATION_FAILED)
                 return 0
         else:
@@ -140,22 +133,22 @@ class Camera:
                 if ret:
                     if not self.is_blinded_by_sun(frame):
                         timestamp = datetime.now()
-                        logger.info(f"Camera {self.camera_id}: Frame captured at {timestamp}")
+                        Logger.log('INFO', f"Camera {self.camera_id}: Frame captured at {timestamp}")
                         self.current_frame = Frame(frame, self.camera_id, timestamp)
                         self.save_image(self.current_frame)
                         self.all_frames.append(self.current_frame)
                     else:
-                        print(f"blinded by the lights")
+                        Logger.log('ERROR', f"Camera {self.camera_id}: Blinded by the lights")
                         self.log_error(CameraErrorCodes.SUN_BLIND)
                 else:
-                    print(f"Failed to capture image from camera {self.camera_id}")
+                    Logger.log('ERROR', f"Camera {self.camera_id}: Failed to capture image")
                     self.log_error(CameraErrorCodes.READ_FRAME_ERROR)
                     self.log_error(CameraErrorCodes.CAPTURE_FAILED)
                     self.camera_status = 0
             finally:
                 self.cap.release()
         else:
-            print(f"Camera {self.camera_id} is not operational.")
+            Logger.log('ERROR', f"Camera {self.camera_id}: Not operational.")
             self.log_error(CameraErrorCodes.CAMERA_NOT_OPERATIONAL)
         return self.camera_status
 
@@ -170,7 +163,7 @@ class Camera:
     def read_image_from_path(self):
         image_files = os.listdir(self.image_folder)
         if not image_files:
-            print(f"No images found for camera {self.camera_id}")
+            Logger.log('ERROR', f"Camera {self.camera_id}: No images found.")
             self.log_error(CameraErrorCodes.NO_IMAGES_FOUND)
             return None
         latest_image_path = max(
@@ -207,7 +200,8 @@ class Camera:
         ts = target_frame.timestamp
         image_name = f"{self.image_folder}/{ts}.jpg"
         cv2.imwrite(image_name,frame)
-        logger.info(f"Camera {self.camera_id}: Image saved as {image_name}")
+        Logger.log('INFO', f"Camera {self.camera_id}: Image saved as {image_name}")
+        
         self._maintain_image_limit(self.image_folder, 50)
     
     def _maintain_image_limit(self, directory_path, limit=50):
@@ -265,7 +259,7 @@ class CameraManager:
         }
         number_of_cameras = len(self.cameras)
         self.camera_frames = []
-        logger.info(f"Camera Manager initialized.")
+        Logger.log('INFO', f"Camera Manager initialized.")
 
     def capture_frames(self):
         """

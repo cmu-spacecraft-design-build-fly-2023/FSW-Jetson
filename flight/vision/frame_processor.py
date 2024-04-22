@@ -13,7 +13,6 @@ Date: [Creation or Last Update Date]
 import cv2
 import numpy as np
 from flight import Logger
-logger = Logger.get_logger()
 
 # Define error messages
 error_messages = {
@@ -57,7 +56,9 @@ class FrameProcessor:
                 if dark_percentage <= dark_threshold:
                     suitable_frames.append(frame_obj)
             except Exception as e:
-                logger.error(f"{error_messages['CONVERSION_ERROR']} or processing error: {e}")
+                Logger.log('ERROR', f"{error_messages['CONVERSION_ERROR']} or processing error: {e}")
+
+        Logger.log('INFO', f"{len(suitable_frames)} frame(s) selected for ML Pipeline.")
         return suitable_frames
 
     def process_for_star_tracker(
@@ -84,5 +85,7 @@ class FrameProcessor:
                 if dark_percentage > dark_threshold:
                     suitable_frames.append(frame_obj)
             except Exception as e:
-                logger.error(f"{error_messages['CONVERSION_ERROR']} or processing error: {e}")
+                Logger.log('ERROR', f"{error_messages['CONVERSION_ERROR']} or processing error: {e}")
+        
+        Logger.log('INFO', f"{len(suitable_frames)} frame(s) selected for Star Tracker.")
         return suitable_frames

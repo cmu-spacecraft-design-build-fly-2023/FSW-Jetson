@@ -16,7 +16,6 @@ import cv2
 from flight.vision.rc import RegionClassifier
 from flight.vision.ld import LandmarkDetector
 from flight import Logger
-logger = Logger.get_logger()
 
 class Landmark:
     """
@@ -109,7 +108,7 @@ class MLPipeline:
         Returns:
             tuple: The camera ID and the landmark detection results for the frame.
         """
-        logger.info("------------------------------Inference---------------------------------")
+        Logger.log('INFO', "------------------------------Inference---------------------------------")
         pred_regions = self.classify_frame(frame_obj)
         frame_results = []
         for region in pred_regions:

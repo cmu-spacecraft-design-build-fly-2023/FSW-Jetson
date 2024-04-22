@@ -19,13 +19,11 @@ import numpy as np
 from ultralytics import YOLO
 import os
 import csv
+import cv2
 from PIL import Image
+from flight import Logger
 
 LD_MODEL_SUF = "_nadir.pt"
-
-# Initialize Logger
-from flight import Logger
-logger = Logger.get_logger()
 
 # Define error and info messages
 error_messages = {
@@ -50,7 +48,7 @@ class LandmarkDetector:
         Initialize the LandmarkDetector with a specific region ID and model path
         The YOLO object is created with the path to a specific pretrained model
         """
-        logger.info(f"Initializing LandmarkDetector for region {region_id}.")
+        Logger.log('INFO', f"Initializing LandmarkDetector for region {region_id}.")
         
         self.region_id = region_id
         try:
@@ -59,7 +57,7 @@ class LandmarkDetector:
                 os.path.join(model_path, region_id, f"{region_id}_top_salient.csv")
             )
         except Exception as e:
-            logger.error(f"{error_messages['LOADING_FAILED']}: {e}")
+            Logger.log('ERROR', f"{error_messages['LOADING_FAILED']}: {e}")
             raise
 
     def load_ground_truth(self, ground_truth_path):
@@ -89,7 +87,7 @@ class LandmarkDetector:
                         )
                     )
         except Exception as e:
-            logger.error(f"{error_messages['CONFIGURATION_ERROR']}: {e}")
+            Logger.log('ERROR', f"{error_messages['CONFIGURATION_ERROR']}: {e}")
             raise
         return ground_truth
 
@@ -228,8 +226,7 @@ class LandmarkDetector:
 
         The detection process filters out landmarks with low confidence scores (below 0.5) and invalid bounding box dimensions. It aims to provide a comprehensive set of data for each detected landmark, facilitating further analysis or processing.
         """
-        #logger.info(f"[Camera {frame_obj.camera_id} frame {BLUE}{frame_obj.frame_id}{ENDC}] {info_messages['DETECTION_START']}")
-        logger.info(f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {info_messages['DETECTION_START']}")
+        Logger.log('INFO', f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {info_messages['DETECTION_START']}")
 
         centroid_xy, centroid_latlons, landmark_class = [], [], []
         try:
@@ -270,15 +267,14 @@ class LandmarkDetector:
                             ]
                         )
                 else:
-                    logger.info(f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {error_messages['EMPTY_DETECTION']}")
+                    Logger.log('INFO', f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {error_messages['EMPTY_DETECTION']}")
                     return None, None, None
 
             if len(landmark_list) == 0:
-                logger.info(f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {error_messages['EMPTY_DETECTION']}")
+                Logger.log('INFO', f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {error_messages['EMPTY_DETECTION']}")
                 return None, None, None
 
             landmark_arr = np.array(landmark_list)
-            print(f"landmark array dimention: {landmark_arr.ndim}")
 
             # Extract centroid coordinates, class IDs, and dimensions (width and height)
             centroid_xy = landmark_arr[:, :2]  # Centroid coordinates [x, y]
@@ -292,14 +288,14 @@ class LandmarkDetector:
             centroid_latlons, corner_latlons = self.get_latlons(landmark_class)
 
         except Exception as e:
-            logger.error(f"{error_messages['DETECTION_FAILED']}: {e}")
+            Logger.log('ERROR', f"{error_messages['DETECTION_FAILED']}: {e}")
             raise
 
-        logger.info(f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {len(landmark_list)} landmarks detected.")
+        Logger.log('INFO', f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {len(landmark_list)} landmarks detected.")
 
         # Logging details for each detected landmark
         if landmark_arr.size > 0:
-            logger.info(f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] class\tcentroid_xy\tcentroid_latlons")
+            Logger.log('INFO', f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] class\tcentroid_xy\tcentroid_latlons")
             for i in range(len(landmark_list)):
                 cls = int(landmark_arr[i, 2])  # Class ID, convert to int for cleaner logging
                 x, y = int(landmark_arr[i, 0]), int(landmark_arr[i, 1])  # Centroid coordinates, convert to int for cleaner logging
@@ -307,6 +303,6 @@ class LandmarkDetector:
                 # Format lat and lon to two decimal places
                 formatted_lat = f"{lat:.2f}"
                 formatted_lon = f"{lon:.2f}"
-                logger.info(f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {cls}\t({x}, {y})\t({formatted_lat}, {formatted_lon})")
+                Logger.log('INFO', f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {cls}\t({x}, {y})\t({formatted_lat}, {formatted_lon})")
 
         return centroid_xy, centroid_latlons, landmark_class

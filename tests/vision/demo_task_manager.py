@@ -1,13 +1,17 @@
 
 from flight.vision.camera import CameraManager, Frame
 from flight.vision import MLPipeline, FrameProcessor
+from flight import Logger
 import time
 import cv2
 import os
+import sys
+import logging
 from PIL import Image
-from flight import Logger
-Logger.clear_log()
-logger = Logger.get_logger()
+
+# Configure and initialize logger for demo
+Logger.configure(log_file='log/demo_system.log', log_level=logging.DEBUG)
+Logger.initialize_log(sys.modules[__name__])
 
 def read_image_from_path(camera_id):
         images_directory = f"captured_images/camera_{camera_id}"
@@ -99,15 +103,19 @@ def draw_landmarks_and_save(frame_obj, regions_and_landmarks, save_dir):
     cv2.imwrite(save_path, image)
     print(f"Saved: {save_path}")
 
-def main():
-    # provide camera IDs connected 
-    camera_ids = [0] 
+def get_config_path():
+    # Relative path to the configuration file
+    relative_path = "/configuration/camera_configuration.yml"
+    config_path = os.path.join(os.getcwd(), relative_path.strip("/"))
+    return config_path
 
-    # create camera manager  
-    cm = CameraManager(camera_ids, "/home/argus-1/FSW-Jetson/configuration/camera_configuration.yml")
+def main():
+    camera_ids = [0] # single camera in use
     processor = FrameProcessor()
     pipeline = MLPipeline()
-
+    config_path = get_config_path()
+    cm = CameraManager(camera_ids, config_path) # create camera manager  
+    
     # capture frames and store images of all cameras 
     cm.capture_frames()
 
@@ -122,7 +130,6 @@ def main():
 
     # get all available frames 
     #all_frames = cm.get_available_frames()
-    # NOTE access same as prev function 
 
     # Prepare the frames_with_ids list for the ML pipeline
     latest_frames = []
@@ -143,3 +150,13 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+    from logger import Logger
+
+    # in task manager 
+    Logger.configure(level)
+    # in all others 
+    Logger.log(level, msg)
+    level = INFO, DEBUG, WARNING, ERROR
+
+    Timestamp - Origin - LEVEL - MSG
