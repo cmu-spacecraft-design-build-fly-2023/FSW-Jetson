@@ -7,13 +7,15 @@ Author: Ibrahima S. Sow
 Date: [Creation or Last Update Date]
 """
 
-import random # FOR DEBUGGING
+
 
 # TODO - fill in functions
 # TODO - Fill in the functions with the correct parameters and return types
 
 
-# Debug
+# DEBUG 
+import random 
+
 def debug_hello(payload):
     print("Hello from the payload!")
     
@@ -25,6 +27,13 @@ def debug_random_error(payload):
 
 def debug_goodbye(payload):
     print("Goodbye from the payload!")
+
+def debug_number(payload):
+    print(f'Processing {payload} to {payload*random.random()}')
+
+
+
+
 
 
 # Time

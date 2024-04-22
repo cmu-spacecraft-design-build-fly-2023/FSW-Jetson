@@ -24,6 +24,7 @@ class PAYLOAD_STATE(Enum):
     LOW_POWER = 0x02
     SAFE_MODE = 0x03
     CRITICAL = 0x04
+    IDLE = 0x05
 
 
 
@@ -35,6 +36,9 @@ class Payload:
         # self._communication = None
         self._camera_manager = None
         self._threads = []
+
+        self.current_task_thread = None  # This will hold the current task's thread
+        self._idle_count = 0  # Counter before switching to IDLE state
 
 
     @property
@@ -57,49 +61,37 @@ class Payload:
         # print("Logger configured to level: ", log_level)
         print("Starting Payload Task Manager...")
 
+        self.initialize()
 
-        self.run_startup_health_procedure()
-        self.retrieve_internal_states()
-        
 
+        """
         self.launch_camera()
-        self.launch_command_queue()
-        self.launch_UART_communication()
+        self.launch_UART_communication()"""
 
 
-
-        ## Dummy stuff for test
-        import random
-        def print_message(p):
-            print(p)
-            return "Message printed successfully."
-
-        def throw_random_error(payload):
-            if random.random() < 0.7:
-                raise Exception("Random error occurred!")
-            else:
-                print("No error occurred.")
-
-
-        task1 = Task(msg.DEBUG_HELLO, ID_TASK_MAPPING[msg.DEBUG_HELLO], None, 50)
-        task2 = Task(msg.DEBUG_RANDOM_ERROR, ID_TASK_MAPPING[msg.DEBUG_RANDOM_ERROR], None, 10)
-        task3 = Task(msg.DEBUG_GOODBYE, ID_TASK_MAPPING[msg.DEBUG_GOODBYE], None, 75)
-
-
-
-        self.command_queue.add_task(task1)
-        self.command_queue.add_task(task2)
-        self.command_queue.add_task(task3)
-
-        self.command_queue.print_all_tasks()
-
-
+        # Creating dummy tasks for demonstration
+        self.DEBUG_tasks()
 
 
         try:
             while True:
-                self.process_next_task()
-                pass
+                
+                print(f'[DEBUG] Payload State: {self.state.name}')
+
+                if self.state == PAYLOAD_STATE.IDLE:
+                    print("Payload is in IDLE state. Checking for tasks every 10 seconds.")
+                    time.sleep(10)
+
+                    if not self.command_queue.is_empty():
+                        self._state = PAYLOAD_STATE.NOMINAL
+                    else:
+                        continue
+                
+                if self.state == PAYLOAD_STATE.NOMINAL:
+                    self.process_next_task()
+                    self.command_queue.print_all_tasks()
+                    time.sleep(1)
+
                 # TODO
         except KeyboardInterrupt:
             print("Shutting down Payload Task Manager...")
@@ -107,16 +99,41 @@ class Payload:
 
 
     def process_next_task(self):
+        if self.current_task_thread and self.current_task_thread.is_alive():
+            return  # If the current task is still running, return immediately
+
         task = self._command_queue.get_next_task()
         if task:
-            # Execute the task
-            task.execute()
+            self.current_task_thread = threading.Thread(target=task.execute)
+            self.current_task_thread.start()
         else:
+            self._idle_count += 1
             print("No task to process.")
-            time.sleep(5)
-            pass
-
+            if self._idle_count >= 5:
+                self._state = PAYLOAD_STATE.IDLE
+                self._idle_count = 0
         
+
+
+    def DEBUG_tasks(self):
+        # For debugging purposes
+        task1 = Task(msg.DEBUG_HELLO, ID_TASK_MAPPING[msg.DEBUG_HELLO], None, 50)
+        task2 = Task(msg.DEBUG_RANDOM_ERROR, ID_TASK_MAPPING[msg.DEBUG_RANDOM_ERROR], None, 10)
+        task3 = Task(msg.DEBUG_GOODBYE, ID_TASK_MAPPING[msg.DEBUG_GOODBYE], None, 75)
+        task4 = Task(msg.DEBUG_NUMBER, ID_TASK_MAPPING[msg.DEBUG_NUMBER], 32, 75)
+
+        self.command_queue.add_task(task1)
+        self.command_queue.add_task(task2)
+        self.command_queue.add_task(task3)
+        self.command_queue.add_task(task4)
+
+
+
+    def initialize(self):
+        self.run_startup_health_procedure()
+        self.retrieve_internal_states()
+        self._state = PAYLOAD_STATE.NOMINAL
+
 
     def run_startup_health_procedure(self):
         print("Running startup health checks...")
@@ -134,8 +151,6 @@ class Payload:
         self._threads.append(camera_thread)"""
        
 
-    def launch_command_queue(self):
-        pass
 
     def launch_UART_communication(self):
         # Start UART communication state machne on its own thread

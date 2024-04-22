@@ -48,7 +48,8 @@ ID_TASK_MAPPING = {
     # DEBUG ONLY
     msg.DEBUG_HELLO: tasks.debug_hello,
     msg.DEBUG_RANDOM_ERROR: tasks.debug_random_error,
-    msg.DEBUG_GOODBYE: tasks.debug_goodbye
+    msg.DEBUG_GOODBYE: tasks.debug_goodbye,
+    msg.DEBUG_NUMBER: tasks.debug_number
 
 
 

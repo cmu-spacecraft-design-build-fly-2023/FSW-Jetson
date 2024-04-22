@@ -63,10 +63,10 @@ class CommandQueue:
         """Remove and return a task from the queue based on priority."""
         with self.lock:
             if self.paused:
-                print("Queue is paused.")
+                # print("Queue is paused.")
                 return None
             elif self.queue.empty():
-                print("Queue is empty.")
+                # print("Queue is empty.")
                 return None
             else:
                 _, _, task = self.queue.get()
@@ -98,7 +98,7 @@ class CommandQueue:
             tasks.sort()  # Sort primarily by priority, secondarily by timestamp
             for priority, timestamp, task in tasks:
                 payload_present = "Yes" if task.payload else "No"
-                print(f"Task ID: {task.task_id}, Priority: {priority}, Payload Present: {payload_present}, Timestamp: {timestamp}, ")
+                print(f"Task ID: {task.task_id}, Priority: {priority},  Timestamp: {timestamp}, Payload Present: {payload_present}")
 
 
 
