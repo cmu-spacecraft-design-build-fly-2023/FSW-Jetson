@@ -129,6 +129,9 @@ def main():
     for camera_id, frame_obj in latest_frames_w_id.items():
         # Ensure that the frame_obj is an instance of Frame and has the necessary attributes
         if isinstance(frame_obj, Frame) and hasattr(frame_obj, 'frame'):
+            rgb_frame = cv2.cvtColor(frame_obj.frame, cv2.COLOR_BGR2RGB)
+            #image = Image.fromarray(rgb_frame)
+            frame_obj.frame = rgb_frame
             latest_frames.append(frame_obj)
             save_frame(frame_obj)
     

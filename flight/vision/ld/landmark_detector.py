@@ -233,7 +233,8 @@ class LandmarkDetector:
         centroid_xy, centroid_latlons, landmark_class = [], [], []
         try:
             # Detect landmarks using the YOLO model
-            results = self.model(frame_obj.frame)
+            #results = self.model(frame_obj.frame)
+            results = self.model.predict(frame_obj.frame, conf=0.7, imgsz=(1080,1920), verbose=False)
             landmark_list = []
 
             # Process each detection result from the model
