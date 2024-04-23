@@ -26,9 +26,7 @@ class FrameProcessor:
         Initializes the FrameProcessor class.
         """
 
-    def process_for_ml_pipeline(
-        self, frames_with_ids, dark_threshold=0.5, brightness_threshold=60
-    ):
+    def process_for_ml_pipeline(self, frames_with_ids, dark_threshold=0.5, brightness_threshold=60):
         """
         Processes frames to select those suitable for machine learning pipeline processing, based on darkness level and potentially other criteria. Each frame is associated with an ID.
 
@@ -43,9 +41,7 @@ class FrameProcessor:
         suitable_frames_with_ids = []
         for frame, camera_id in frames_with_ids:
             gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            dark_percentage = np.sum(gray_frame < brightness_threshold) / np.prod(
-                gray_frame.shape
-            )
+            dark_percentage = np.sum(gray_frame < brightness_threshold) / np.prod(gray_frame.shape)
             if dark_percentage <= dark_threshold:
                 suitable_frames_with_ids.append((frame, camera_id))
         return suitable_frames_with_ids
@@ -67,9 +63,7 @@ class FrameProcessor:
         suitable_frames_with_ids = []
         for frame, camera_id in frames_with_ids:
             gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            dark_percentage = np.sum(gray_frame < brightness_threshold) / np.prod(
-                gray_frame.shape
-            )
+            dark_percentage = np.sum(gray_frame < brightness_threshold) / np.prod(gray_frame.shape)
             if dark_percentage > dark_threshold:
                 suitable_frames_with_ids.append((frame, camera_id))
         return suitable_frames_with_ids

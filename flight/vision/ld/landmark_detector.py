@@ -105,9 +105,7 @@ class LandmarkDetector:
                 bottom_right_lon,
                 bottom_right_lat,
             ) = self.ground_truth[index]
-            corners.append(
-                [top_left_lon, top_left_lat, bottom_right_lon, bottom_right_lat]
-            )
+            corners.append([top_left_lon, top_left_lat, bottom_right_lon, bottom_right_lat])
             centroids.append([centroid_lon, centroid_lat])
         return np.array(centroids), np.array(corners)
 

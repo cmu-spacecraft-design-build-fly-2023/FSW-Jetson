@@ -7,7 +7,6 @@ Author: Ibrahima S. Sow
 Date: [Creation or Last Update Date]
 """
 
-
 import queue
 import threading
 import time
@@ -39,13 +38,13 @@ class Task:
                 print(f"Task {self.task_id} exceeded retry limit and will not be attempted again.")
                 # TODO Error message must be logged here and sent to a monitoring system / Argus
                 return None
-            
+
+
 class CommandQueue:
     def __init__(self):
         self._queue = queue.PriorityQueue()
         self.paused = False
         self.lock = threading.Lock()
-
 
     @property
     def queue(self):
@@ -72,7 +71,6 @@ class CommandQueue:
                 _, _, task = self.queue.get()
                 return task
 
-
     def pause(self):
         """Pause the queue operations."""
         self.paused = True
@@ -83,10 +81,10 @@ class CommandQueue:
 
     def is_empty(self):
         return self.queue.empty()
-    
+
     def size(self):
         return self.queue.qsize()
-    
+
     def clear(self):
         with self.lock:
             self.queue.queue.clear()
@@ -98,24 +96,21 @@ class CommandQueue:
             tasks.sort()  # Sort primarily by priority, secondarily by timestamp
             for priority, timestamp, task in tasks:
                 payload_present = "Yes" if task.payload else "No"
-                print(f"Task ID: {task.task_id}, Priority: {priority},  Timestamp: {timestamp}, Payload Present: {payload_present}")
-
-
+                print(
+                    f"Task ID: {task.task_id}, Priority: {priority},  Timestamp: {timestamp}, Payload Present: {payload_present}"
+                )
 
 
 if __name__ == "__main__":
 
     import random
+
     def print_message(payload):
         print(payload)
-
-        return "Message printed successfully."
 
     def throw_random_error(payload):
         if random.random() < 0.7:
             raise Exception("Random error occurred!")
-        else:
-            print("No error occurred.")
 
     command_queue = CommandQueue()
 

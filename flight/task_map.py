@@ -11,7 +11,6 @@ from flight import message as msg
 import flight.tasks as tasks
 
 
-
 # Map task IDs to their respective functions
 ID_TASK_MAPPING = {
     msg.SYNCHRONIZE_TIME: tasks.synchronize_time,
@@ -38,21 +37,10 @@ ID_TASK_MAPPING = {
     msg.DISABLE_CAMERA_X: tasks.disable_camera_x,
     msg.REQUEST_IMAGE_STORAGE_INFO: tasks.request_image_storage_info,
     msg.REQUEST_CAMERA_STATUS: tasks.request_camera_status,
-
-
-
-
     # ...
-
-
     # DEBUG ONLY
     msg.DEBUG_HELLO: tasks.debug_hello,
     msg.DEBUG_RANDOM_ERROR: tasks.debug_random_error,
     msg.DEBUG_GOODBYE: tasks.debug_goodbye,
-    msg.DEBUG_NUMBER: tasks.debug_number
-
-
-
-
-
+    msg.DEBUG_NUMBER: tasks.debug_number,
 }

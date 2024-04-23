@@ -91,9 +91,7 @@ class MLPipeline:
             frame_results = []
             for region in pred_regions:
                 detector = LandmarkDetector(region_id=region)
-                centroid_xy, centroid_latlons, landmark_classes = (
-                    detector.detect_landmarks(frame)
-                )
+                centroid_xy, centroid_latlons, landmark_classes = detector.detect_landmarks(frame)
                 landmark = Landmark(centroid_xy, centroid_latlons, landmark_classes)
                 frame_results.append((region, landmark))
             results.append((camera_id, frame_results))
@@ -115,9 +113,7 @@ class MLPipeline:
         frame_results = []
         for region in pred_regions:
             detector = LandmarkDetector(region_id=region)
-            centroid_xy, centroid_latlons, landmark_classes = detector.detect_landmarks(
-                frame
-            )
+            centroid_xy, centroid_latlons, landmark_classes = detector.detect_landmarks(frame)
             landmark = Landmark(centroid_xy, centroid_latlons, landmark_classes)
             frame_results.append((region, landmark))
         return (camera_id, frame_results)

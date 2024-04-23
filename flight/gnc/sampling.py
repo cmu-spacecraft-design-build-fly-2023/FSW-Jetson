@@ -38,9 +38,7 @@ def sample_sun_synchronous_orbit(
     raan = np.random.rand() * 2 * np.pi
     omega = np.random.rand() * 2 * np.pi
     anomaly = np.random.rand() * 2 * np.pi
-    eci_state = astrodynamics.get_CART_from_OSC(
-        np.array([sma, ecc, i, raan, omega, anomaly])
-    )
+    eci_state = astrodynamics.get_CART_from_OSC(np.array([sma, ecc, i, raan, omega, anomaly]))
     return eci_state
 
 

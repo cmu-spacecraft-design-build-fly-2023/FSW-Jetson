@@ -58,14 +58,9 @@ class Camera:
         try:
             config = self.load_config(config_path)
         except Exception as e:
-            logging.error(
-                f"{error_messages[CameraErrorCodes.CONFIGURATION_ERROR]}: {e}"
-            )
-            logging.error(
-                f"{error_messages[CameraErrorCodes.CONFIGURATION_ERROR]}: {e}"
-            )
+            logging.error(f"{error_messages[CameraErrorCodes.CONFIGURATION_ERROR]}: {e}")
+            logging.error(f"{error_messages[CameraErrorCodes.CONFIGURATION_ERROR]}: {e}")
             raise ValueError(error_messages[CameraErrorCodes.CONFIGURATION_ERROR])
-
 
         self.camera_id = camera_id
         self.image_folder = f"captured_images/camera_{camera_id}"
@@ -137,9 +132,7 @@ class Camera:
                 if ret:
                     if not self.is_blinded_by_sun(frame):
                         timestamp = datetime.now()
-                        print(
-                            f"Image captured from camera {self.camera_id} at {timestamp}"
-                        )
+                        print(f"Image captured from camera {self.camera_id} at {timestamp}")
                         self.current_frame = Frame(frame, self.camera_id, timestamp)
                     else:
                         print(f"blinded by the lights")
@@ -229,12 +222,9 @@ class Camera:
 
 class CameraManager:
 
-    def __init__(
-        self, camera_ids, config_path="configuration/camera_configuration.yml"
-    ):
+    def __init__(self, camera_ids, config_path="configuration/camera_configuration.yml"):
         self.cameras = {
-            camera_id: Camera(camera_id, config_path=config_path)
-            for camera_id in camera_ids
+            camera_id: Camera(camera_id, config_path=config_path) for camera_id in camera_ids
         }
         number_of_cameras = len(self.cameras)
         self.camera_frames = []
@@ -287,9 +277,7 @@ class CameraManager:
             try:
                 camera_frames.append(camera.current_frame)
             except:
-                print(
-                    f"No frames found for camera {camera_id}, or no images are present."
-                )
+                print(f"No frames found for camera {camera_id}, or no images are present.")
                 camera.log_error(CameraErrorCodes.NO_IMAGES_FOUND)
         return camera_frames
 

@@ -42,9 +42,7 @@ class RegionClassifier:
         in_features = (
             self.model._fc.in_features
         )  # Get the number of input features for the final layer
-        self.model._fc = torch.nn.Linear(
-            in_features, NUM_CLASS
-        )  # Adjust the final layer
+        self.model._fc = torch.nn.Linear(in_features, NUM_CLASS)  # Adjust the final layer
 
         # Load Custom model weights
         self.model.load_state_dict(
@@ -61,9 +59,7 @@ class RegionClassifier:
             [
                 transforms.Resize((224, 224)),
                 transforms.ToTensor(),
-                transforms.Normalize(
-                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-                ),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ]
         )
 
@@ -103,9 +99,7 @@ class RegionClassifier:
 
         with torch.no_grad():
             outputs = self.model(img)
-            probabilities = F.softmax(
-                outputs, dim=1
-            )  # Apply softmax to convert to probabilities
+            probabilities = F.softmax(outputs, dim=1)  # Apply softmax to convert to probabilities
             # _, predicted = torch.max(probabilities, 1)  # Get the class with the highest probability
 
             # Filter classes with probabilities greater than a threshold (close to zero)
@@ -136,9 +130,7 @@ class RegionClassifier:
 
         with torch.no_grad():
             outputs = self.model(img)
-            probabilities = F.softmax(
-                outputs, dim=1
-            )  # Apply softmax to convert to probabilities
+            probabilities = F.softmax(outputs, dim=1)  # Apply softmax to convert to probabilities
             # _, predicted = torch.max(probabilities, 1)  # Get the class with the highest probability
 
             # Filter classes with probabilities greater than a threshold (close to zero)

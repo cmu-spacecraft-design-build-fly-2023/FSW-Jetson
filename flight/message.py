@@ -7,11 +7,10 @@ Author: Ibrahima S. Sow
 Date: [Creation or Last Update Date]
 """
 
-
 ################# RX
 
 
-# Time 
+# Time
 SYNCHRONIZE_TIME = 0x00
 REQUEST_TIME = 0x01
 
@@ -23,19 +22,14 @@ DEBUG_GOODBYE = 0x8A
 DEBUG_NUMBER = 0x8B
 
 
-
-
-
-
 # Payload Control
 REQUEST_PAYLOAD_STATE = 0x20
 REQUEST_PAYLOAD_MONITORING_DATA = 0x21
 REQUEST_CAMERA_STATUS = 0x22
 RESTART_PAYLOAD = 0x23
 # SHUTDOWN_PAYLOAD = 0x24
-REQUEST_LOGS_FROM_LAST_X_SECONDS = 0x25 # Payload sends logs from the last X seconds in payload
+REQUEST_LOGS_FROM_LAST_X_SECONDS = 0x25  # Payload sends logs from the last X seconds in payload
 DELETE_ALL_LOGS = 0x26
-
 
 
 # Camera
@@ -54,17 +48,14 @@ CHANGE_CAMERA_RESOLUTION = 0x3A
 DELETE_ALL_STORED_IMAGES = 0x3B
 
 
-
 # INFERENCE
 
 REQUEST_LANDMARKED_IMAGE = 0x40
 REQUEST_LANDMARKED_IMAGE_METADATA = 0x41
 DISABLE_REGION_X = 0x42
 ENABLE_REGION_X = 0x43
-REQUEST_REGION_X_STATUS = 0x44 #  If a landmark detector is really bad
+REQUEST_REGION_X_STATUS = 0x44  #  If a landmark detector is really bad
 REQUEST_LAST_OBSERVATIONS_FILE = 0x45
-
-
 
 
 # Attitude and Orbit Estimation
@@ -74,37 +65,13 @@ RESET_AOD_STATE = 0x50
 REQUEST_AOD_LAST_ESTIMATE = 0x51
 REQUEST_ATTITUDE_ESTIMATE = 0x52
 REQUEST_ORBIT_ESTIMATE = 0x53
-RESOLVE_STATE = 0x54 # Payload simulate forward to current time (prediction)
+RESOLVE_STATE = 0x54  # Payload simulate forward to current time (prediction)
 REQUEST_LAST_AOD_ESTIMATE_LOGS = 0x55
 RUN_ATTITUDE_AND_ORBIT_ESTIMATION = 0x56
 REQUEST_ATTITUDE_STAR_TRACKER = 0x57
 
 
-
-
-
 ## OTA
 
 
-
-
-
-
-
 ################# TX
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

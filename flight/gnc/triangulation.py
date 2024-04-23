@@ -22,9 +22,7 @@ def compute_nadir_vector(orbit_pos: np.ndarray) -> np.ndarray:
     return -orbit_pos / norm
 
 
-def nadir_pointing_attitude(
-    vec_to_align: np.ndarray, nadir_dir: np.ndarray
-) -> np.ndarray:
+def nadir_pointing_attitude(vec_to_align: np.ndarray, nadir_dir: np.ndarray) -> np.ndarray:
     """
     Get the quaternion representing the nadir pointing attitude.
 
@@ -46,9 +44,7 @@ def nadir_pointing_attitude(
 
     c = np.cross(vec_to_align_normalized, nadir_dir_normalized)
     n = c / np.linalg.norm(c)
-    theta = np.arctan2(
-        np.linalg.norm(c), np.dot(vec_to_align_normalized, nadir_dir_normalized)
-    )
+    theta = np.arctan2(np.linalg.norm(c), np.dot(vec_to_align_normalized, nadir_dir_normalized))
     dq = np.hstack((np.cos(theta / 2), n * np.sin(theta / 2)))
     dq = dq / np.linalg.norm(dq)
     return dq
@@ -148,9 +144,7 @@ def sampling_search(
     if verbose:
         print("Cost after grid sampling: ", curr_cost)
     P_cr = (initial_angular_sampling_step**2) * np.eye(3)
-    for i in range(
-        max_iterations
-    ):  # TODO - other stopping condition based on cost reduction
+    for i in range(max_iterations):  # TODO - other stopping condition based on cost reduction
         P_cr = P_cr * decay
         # TODO pre-allocate but handle the case where the number of samples is less than N_samples (rejection sampling)
         Q_samples = np.zeros((N_samples, 3, 3))

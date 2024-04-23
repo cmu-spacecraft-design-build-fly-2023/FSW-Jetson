@@ -49,6 +49,4 @@ class FakeCameraFeed:
         """
         for camera_id in range(1, num_frames + 1):
             # Example variation in color for demonstration
-            yield self.generate_frame(
-                camera_id, frame_color=(0, 255, camera_id * 40)
-            ), camera_id
+            yield self.generate_frame(camera_id, frame_color=(0, 255, camera_id * 40)), camera_id
