@@ -25,8 +25,10 @@ def read_image_from_path(camera_id):
     )
     image = cv2.imread(latest_image_path)
     window_name = "Display Image"
-    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)  # Allows window resizing by the user
-    cv2.imshow(window_name, image)  # Correct usage: Provide window name and the image
+    # Allows window resizing by the user
+    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+    # Correct usage: Provide window name and the image
+    cv2.imshow(window_name, image)
     cv2.waitKey(0)  # Wait for any key press
     cv2.destroyAllWindows()
     return
@@ -88,7 +90,8 @@ def draw_landmarks_and_save(frame_obj, regions_and_landmarks, save_dir):
 
     # Draw each landmark with a larger circle based on its region
     region_color_map = {}
-    circle_radius = 15  # Increased circle radius (3 times the original radius of 5)
+    # Increased circle radius (3 times the original radius of 5)
+    circle_radius = 15
     circle_thickness = -1  # Filled circle
     for idx, (region, detection_result) in enumerate(regions_and_landmarks):
         color = colors[idx % len(colors)]
@@ -100,7 +103,8 @@ def draw_landmarks_and_save(frame_obj, regions_and_landmarks, save_dir):
     # Add a larger legend to the image
     legend_x = 10
     legend_y = 50  # Start a bit lower to accommodate larger text
-    font_scale = 1.5  # Increased font scale (3 times the original scale of 0.5)
+    # Increased font scale (3 times the original scale of 0.5)
+    font_scale = 1.5
     text_thickness = 3  # Thicker text for better visibility
     for region, color in region_color_map.items():
         cv2.putText(

@@ -12,6 +12,7 @@ Author: Eddie
 Date: [Creation or Last Update Date]
 """
 
+from torchvision.models import efficientnet_b0, EfficientNet_B0_Weights
 import os
 import yaml
 import cv2
@@ -37,14 +38,13 @@ info_messages = {
     "CLASSIFICATION_START": "Starting the classification process.",
 }
 
-from torchvision.models import efficientnet_b0, EfficientNet_B0_Weights
-
 
 class ClassifierEfficient(nn.Module):
     def __init__(self, num_classes):
         super(ClassifierEfficient, self).__init__()
         # Using new weights system
-        weights = EfficientNet_B0_Weights.DEFAULT  # This uses the most up-to-date weights
+        # This uses the most up-to-date weights
+        weights = EfficientNet_B0_Weights.DEFAULT
         self.efficientnet = efficientnet_b0(weights=weights)
         for param in self.efficientnet.features[:3].parameters():
             param.requires_grad = False
@@ -83,6 +83,7 @@ class RegionClassifier:
             [
                 transforms.Resize((224, 224)),
                 transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ]
         )

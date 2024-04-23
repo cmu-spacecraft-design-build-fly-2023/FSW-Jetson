@@ -92,7 +92,8 @@ class Logger:
     def get_caller_info():
         """Gets the caller's information for logging purposes."""
         try:
-            caller_frame_record = inspect.stack()[2]  # Adjusted the index as needed
+            # Adjusted the index as needed
+            caller_frame_record = inspect.stack()[2]
             frame = caller_frame_record[0]
             info = inspect.getframeinfo(frame)
             return f"{os.path.basename(info.filename)}:{info.lineno:4d}"

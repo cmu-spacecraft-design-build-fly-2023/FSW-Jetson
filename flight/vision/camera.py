@@ -38,7 +38,8 @@ class Frame:
         self.camera_id = camera_id
         self.frame = frame
         self.timestamp = timestamp
-        self.frame_id = self.generate_frame_id(timestamp)  # Generate ID by hashing the timestamp
+        # Generate ID by hashing the timestamp
+        self.frame_id = self.generate_frame_id(timestamp)
 
     def generate_frame_id(self, timestamp):
         """
@@ -221,7 +222,8 @@ class Camera:
 
     def _maintain_image_limit(self, directory_path, limit=50):
         files = [os.path.join(directory_path, f) for f in os.listdir(directory_path)]
-        files.sort(key=os.path.getctime)  # Sort files by creation time (oldest first)
+        # Sort files by creation time (oldest first)
+        files.sort(key=os.path.getctime)
 
         # If more than `limit` files, remove the oldest ones
         while len(files) > limit:
@@ -349,7 +351,8 @@ class CameraManager:
         latest_frames = {}
         for camera_id, camera in self.cameras.items():
             if camera.all_frames:
-                latest_frames[camera_id] = camera.all_frames[-1]  # Get the last frame in the list
+                # Get the last frame in the list
+                latest_frames[camera_id] = camera.all_frames[-1]
             else:
                 print(f"No frames found for camera {camera_id}.")
                 camera.log_error(CameraErrorCodes.NO_IMAGES_FOUND)

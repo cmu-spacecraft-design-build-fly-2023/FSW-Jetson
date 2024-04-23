@@ -311,7 +311,8 @@ class LandmarkDetector:
                 f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] class\tcentroid_xy\tcentroid_latlons",
             )
             for i in range(len(landmark_list)):
-                cls = int(landmark_arr[i, 2])  # Class ID, convert to int for cleaner logging
+                # Class ID, convert to int for cleaner logging
+                cls = int(landmark_arr[i, 2])
                 x, y = int(landmark_arr[i, 0]), int(
                     landmark_arr[i, 1]
                 )  # Centroid coordinates, convert to int for cleaner logging
