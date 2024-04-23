@@ -8,17 +8,28 @@ Date: [Creation or Last Update Date]
 """
 
 import time
+import serial
+
 import packet
 from packet import Packet
 
 MAX_RETRIES = 3
 TIMEOUT = 500
-
+BAUDRATE = 57600
 
 class UARTComm:
 
-    def __init__(self, uart):
-        self.uart = uart
+    def __init__(self, port="/dev/ttyTHS0", baudrate=BAUDRATE):
+        try:
+            self.uart = serial.Serial(port, baudrate=baudrate)
+            self.uart.reset_input_buffer()
+            self.uart.reset_output_buffer()
+        except serial.SerialException as e:
+            print(f"Error: Failed to initialize UART communication. {e}") # TODO logger instead of print
+            raise e # Temp
+    
+        self.port = port
+        self.baudrate = baudrate
 
     def send_message(self, message) -> bool:
         """
