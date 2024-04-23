@@ -10,7 +10,7 @@ import payload as PAYLOAD
 
 if __name__ == "__main__":
 
-    import flight.message as msg
+    import flight.message_id as msg
     from flight.task_map import ID_TASK_MAPPING
 
     import threading

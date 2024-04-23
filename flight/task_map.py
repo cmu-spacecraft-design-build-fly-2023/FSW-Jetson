@@ -7,40 +7,65 @@ Author: Ibrahima S. Sow
 Date: [Creation or Last Update Date]
 """
 
-from flight import message as msg
+from flight import message_id as msg_id
 import flight.tasks as tasks
+
+def get_task_from_id(id):
+    """
+    Returns the task function associated with the given task/message ID.
+
+    Args:
+        id (int): The task/message ID.
+
+    Returns:
+        function: The task function associated with the given task/message ID.
+    """
+    return ID_TASK_MAPPING.get(id, None)
+
+
+def ID_exists(id):
+    """
+    Checks if the given task/message ID exists in the task/message mapping.
+
+    Args:
+        id (int): The task/message ID.
+
+    Returns:
+        bool: True if the task/message ID exists, False otherwise.
+    """
+    return id in ID_TASK_MAPPING
 
 
 # Map task IDs to their respective functions
 ID_TASK_MAPPING = {
-    msg.SYNCHRONIZE_TIME: tasks.synchronize_time,
-    msg.REQUEST_TIME: tasks.request_time,
-    msg.REQUEST_PAYLOAD_STATE: tasks.request_payload_state,
-    msg.REQUEST_PAYLOAD_MONITORING_DATA: tasks.request_payload_monitoring_data,
-    msg.RESTART_PAYLOAD: tasks.restart_payload,
-    msg.REQUEST_LOGS_FROM_LAST_X_SECONDS: tasks.request_logs_from_last_x_seconds,
-    msg.DELETE_ALL_LOGS: tasks.delete_all_logs,
-    msg.CAPTURE_AND_SEND_IMAGE: tasks.capture_and_send_image,
-    msg.REQUEST_LAST_IMAGE: tasks.request_last_image,
-    msg.REQUEST_IMAGE_METADATA: tasks.request_image_metadata,
-    msg.REQUEST_IMAGE_STORAGE_INFO: tasks.request_image_storage_info,
-    msg.CHANGE_CAMERA_RESOLUTION: tasks.change_camera_resolution,
-    msg.DELETE_ALL_STORED_IMAGES: tasks.delete_all_stored_images,
-    msg.REQUEST_LANDMARKED_IMAGE: tasks.request_landmarked_image,
-    msg.REQUEST_LANDMARKED_IMAGE_METADATA: tasks.request_landmarked_image_metadata,
-    msg.DISABLE_REGION_X: tasks.disable_region_x,
-    msg.ENABLE_REGION_X: tasks.enable_region_x,
-    msg.REQUEST_REGION_X_STATUS: tasks.request_region_x_status,
-    msg.TURN_ON_CAMERAS: tasks.turn_on_cameras,
-    msg.TURN_OFF_CAMERAS: tasks.turn_off_cameras,
-    msg.ENABLE_CAMERA_X: tasks.enable_camera_x,
-    msg.DISABLE_CAMERA_X: tasks.disable_camera_x,
-    msg.REQUEST_IMAGE_STORAGE_INFO: tasks.request_image_storage_info,
-    msg.REQUEST_CAMERA_STATUS: tasks.request_camera_status,
+    msg_id.SYNCHRONIZE_TIME: tasks.synchronize_time,
+    msg_id.REQUEST_TIME: tasks.request_time,
+    msg_id.REQUEST_PAYLOAD_STATE: tasks.request_payload_state,
+    msg_id.REQUEST_PAYLOAD_MONITORING_DATA: tasks.request_payload_monitoring_data,
+    msg_id.RESTART_PAYLOAD: tasks.restart_payload,
+    msg_id.REQUEST_LOGS_FROM_LAST_X_SECONDS: tasks.request_logs_from_last_x_seconds,
+    msg_id.DELETE_ALL_LOGS: tasks.delete_all_logs,
+    msg_id.CAPTURE_AND_SEND_IMAGE: tasks.capture_and_send_image,
+    msg_id.REQUEST_LAST_IMAGE: tasks.request_last_image,
+    msg_id.REQUEST_IMAGE_METADATA: tasks.request_image_metadata,
+    msg_id.REQUEST_IMAGE_STORAGE_INFO: tasks.request_image_storage_info,
+    msg_id.CHANGE_CAMERA_RESOLUTION: tasks.change_camera_resolution,
+    msg_id.DELETE_ALL_STORED_IMAGES: tasks.delete_all_stored_images,
+    msg_id.REQUEST_LANDMARKED_IMAGE: tasks.request_landmarked_image,
+    msg_id.REQUEST_LANDMARKED_IMAGE_METADATA: tasks.request_landmarked_image_metadata,
+    msg_id.DISABLE_REGION_X: tasks.disable_region_x,
+    msg_id.ENABLE_REGION_X: tasks.enable_region_x,
+    msg_id.REQUEST_REGION_X_STATUS: tasks.request_region_x_status,
+    msg_id.TURN_ON_CAMERAS: tasks.turn_on_cameras,
+    msg_id.TURN_OFF_CAMERAS: tasks.turn_off_cameras,
+    msg_id.ENABLE_CAMERA_X: tasks.enable_camera_x,
+    msg_id.DISABLE_CAMERA_X: tasks.disable_camera_x,
+    msg_id.REQUEST_IMAGE_STORAGE_INFO: tasks.request_image_storage_info,
+    msg_id.REQUEST_CAMERA_STATUS: tasks.request_camera_status,
     # ...
     # DEBUG ONLY
-    msg.DEBUG_HELLO: tasks.debug_hello,
-    msg.DEBUG_RANDOM_ERROR: tasks.debug_random_error,
-    msg.DEBUG_GOODBYE: tasks.debug_goodbye,
-    msg.DEBUG_NUMBER: tasks.debug_number,
+    msg_id.DEBUG_HELLO: tasks.debug_hello,
+    msg_id.DEBUG_RANDOM_ERROR: tasks.debug_random_error,
+    msg_id.DEBUG_GOODBYE: tasks.debug_goodbye,
+    msg_id.DEBUG_NUMBER: tasks.debug_number,
 }

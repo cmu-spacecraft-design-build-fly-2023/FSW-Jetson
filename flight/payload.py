@@ -5,7 +5,7 @@ Description: This module implements the high-level Payload Task Manager, which i
 It runs the main control loop for the payload system and is responsible for:
 - Initializing the system, running startup health checks, and retrieving internal states
 - Managing and switching between different payload states
-- Handling the cmaera management and UART communication components
+- Handling the camera management and UART communication components
 - Adding and processing tasks from the command queue
 - ...
 
@@ -18,9 +18,10 @@ import threading
 
 from enum import Enum, unique
 from flight.command import CommandQueue, Task
-import flight.message as msg
+import flight.message_id as msg
 from flight.task_map import ID_TASK_MAPPING
 from flight.vision.camera.camera import CameraManager
+
 
 
 # PAYLOAD STATES
@@ -53,6 +54,10 @@ class Payload:
     @property
     def command_queue(self):
         return self._command_queue
+    
+    @property
+    def send_queue(self):
+        return self._send_queue
 
     @property
     def communication(self):

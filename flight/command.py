@@ -1,7 +1,7 @@
 """
 Payload Command Queue
 
-Description: Contains the PriorityCommandQueue class that manages the queue of tasks to be executed by the Payload. 
+Description: Contains the CommandQueue class that manages the queue of tasks to be executed by the Payload. 
 
 Author: Ibrahima S. Sow
 Date: [Creation or Last Update Date]
@@ -99,6 +99,35 @@ class CommandQueue:
                 print(
                     f"Task ID: {task.task_id}, Priority: {priority},  Timestamp: {timestamp}, Payload Present: {payload_present}"
                 )
+
+class TX_Queue:
+    def __init__(self):
+        self._queue = queue.Queue()
+        self.lock = threading.Lock()
+
+    @property
+    def queue(self):
+        return self._queue
+
+    def add_msg(self, msg):
+        with self.lock:
+            self.queue.put(msg)
+
+    def is_empty(self):
+        return self.queue.empty()
+
+    def size(self):
+        return self.queue.qsize()
+
+    def clear(self):
+        with self.lock:
+            self.queue.queue.clear()
+
+
+
+
+
+
 
 
 if __name__ == "__main__":
