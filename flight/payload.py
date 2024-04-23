@@ -20,8 +20,7 @@ from enum import Enum, unique
 from flight.command import CommandQueue, Task
 import flight.message_id as msg
 from flight.task_map import ID_TASK_MAPPING
-from flight.vision.camera.camera import CameraManager
-
+from flight.vision.camera import CameraManager
 
 
 # PAYLOAD STATES
@@ -54,7 +53,7 @@ class Payload:
     @property
     def command_queue(self):
         return self._command_queue
-    
+
     @property
     def send_queue(self):
         return self._send_queue

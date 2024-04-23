@@ -19,6 +19,7 @@ MAX_RETRIES = 3
 TIMEOUT = 500
 BAUDRATE = 57600
 
+
 class UARTComm:
 
     def __init__(self, port="/dev/ttyTHS0", baudrate=BAUDRATE):
@@ -27,9 +28,11 @@ class UARTComm:
             self.uart.reset_input_buffer()
             self.uart.reset_output_buffer()
         except serial.SerialException as e:
-            print(f"Error: Failed to initialize UART communication. {e}") # TODO logger instead of print
-            raise e # Temp
-    
+            print(
+                f"Error: Failed to initialize UART communication. {e}"
+            )  # TODO logger instead of print
+            raise e  # Temp
+
         self.port = port
         self.baudrate = baudrate
 
@@ -129,8 +132,6 @@ class UARTComm:
             # TODO handle case with no success
         return message
 
-
-
     def run(self, payload_rx_queue, payload_tx_queue):
         """
         Main loop for the UART communication module.
@@ -148,7 +149,5 @@ class UARTComm:
             if self.uart.in_waiting > 0:
                 msg = self.receive_message()
                 payload_rx_queue.put(msg)
-                
-            time.sleep(0.1)
 
-        
+            time.sleep(0.1)

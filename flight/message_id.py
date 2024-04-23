@@ -7,7 +7,7 @@ Author: Ibrahima S. Sow
 Date: [Creation or Last Update Date]
 """
 
-################# RX
+# RX
 
 
 # Time
@@ -28,7 +28,8 @@ REQUEST_PAYLOAD_MONITORING_DATA = 0x21
 REQUEST_CAMERA_STATUS = 0x22
 RESTART_PAYLOAD = 0x23
 # SHUTDOWN_PAYLOAD = 0x24
-REQUEST_LOGS_FROM_LAST_X_SECONDS = 0x25  # Payload sends logs from the last X seconds in payload
+# Payload sends logs from the last X seconds in payload
+REQUEST_LOGS_FROM_LAST_X_SECONDS = 0x25
 DELETE_ALL_LOGS = 0x26
 
 
@@ -54,7 +55,7 @@ REQUEST_LANDMARKED_IMAGE = 0x40
 REQUEST_LANDMARKED_IMAGE_METADATA = 0x41
 DISABLE_REGION_X = 0x42
 ENABLE_REGION_X = 0x43
-REQUEST_REGION_X_STATUS = 0x44  #  If a landmark detector is really bad
+REQUEST_REGION_X_STATUS = 0x44  # If a landmark detector is really bad
 REQUEST_LAST_OBSERVATIONS_FILE = 0x45
 
 
@@ -71,8 +72,7 @@ RUN_ATTITUDE_AND_ORBIT_ESTIMATION = 0x56
 REQUEST_ATTITUDE_STAR_TRACKER = 0x57
 
 
-## OTA
+# OTA
 
 
-################# TX
-
+# TX

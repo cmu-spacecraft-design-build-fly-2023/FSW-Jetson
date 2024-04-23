@@ -36,6 +36,7 @@ Data Packet (Including Ack)
 +-----------------+-----------------+-----------------+---------------+
 """
 
+
 class Message:
     def __init__(self, message_type, data):
         """

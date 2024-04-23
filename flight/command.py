@@ -100,6 +100,7 @@ class CommandQueue:
                     f"Task ID: {task.task_id}, Priority: {priority},  Timestamp: {timestamp}, Payload Present: {payload_present}"
                 )
 
+
 class TX_Queue:
     def __init__(self):
         self._queue = queue.Queue()
@@ -122,12 +123,6 @@ class TX_Queue:
     def clear(self):
         with self.lock:
             self.queue.queue.clear()
-
-
-
-
-
-
 
 
 if __name__ == "__main__":
