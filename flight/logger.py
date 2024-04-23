@@ -15,7 +15,7 @@ Example Usage:
     from flight import Logger
 
     # Example of configuring the logger and initializing the log file
-    Logger.configure(log_file='log/specific_system.log', log_level=logging.DEBUG)
+    Logger.configure(log_level=logging.DEBUG, log_file='log/specific_system.log')
     Logger.initialize_log(module_name=sys.modules[__name__], init_msg="Logger purpose: ...")
 
     # Example of logging messages
@@ -39,15 +39,27 @@ import os
 import inspect
 
 # Default configuration upon module load (can be reconfigured elsewhere in the code)
-# Logger.configure(log_file='log/payload.log', log_level=logging.DEBUG)
+# Logger.configure(log_level=logging.DEBUG, log_file='log/payload.log')
 
+def map_log_level(log_level):
+    """Maps the input log level to the corresponding logging module level."""
+    if log_level.upper() == "INFO":
+        return logging.INFO
+    elif log_level.upper() == "DEBUG":
+        return logging.DEBUG
+    elif log_level.upper() == "WARNING":
+        return logging.WARNING
+    elif log_level.upper() == "ERROR":
+        return logging.ERROR
 
+    
 class Logger:
     logger = None
     log_file_path = "log/payload.log"
+    levels = ["INFO", "DEBUG", "WARNING", "ERROR"]
 
     @classmethod
-    def configure(cls, log_file="log/payload.log", log_level=logging.INFO):
+    def configure(cls, log_level='INFO', log_file="log/payload.log"):
         """Configures the class logger with specific handlers and levels."""
         cls.log_file_path = os.path.join(os.getcwd(), log_file)
         # Create directory for log file if it does not exist
@@ -56,14 +68,14 @@ class Logger:
 
         # Set up the logger
         cls.logger = logging.getLogger("AppLogger")
-        cls.logger.setLevel(log_level)  # Set the overall minimum logging level
+        cls.logger.setLevel(map_log_level(log_level))  # Set the overall minimum logging level
         cls.logger.handlers = []  # Clear existing handlers
 
         # Create handlers
         c_handler = logging.StreamHandler()
         f_handler = logging.FileHandler(cls.log_file_path, mode="a")  # Append mode
         c_handler.setLevel(logging.INFO)
-        f_handler.setLevel(log_level)
+        f_handler.setLevel(map_log_level(log_level))
 
         # Create formatters and add them to handlers
         formatter = logging.Formatter(

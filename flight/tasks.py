@@ -7,6 +7,8 @@ Author: Ibrahima S. Sow
 Date: [Creation or Last Update Date]
 """
 
+from flight.logger import Logger
+
 # TODO - fill in functions
 # TODO - Fill in the functions with the correct parameters and return types
 
@@ -16,7 +18,7 @@ import random
 
 
 def debug_hello(payload):
-    print("Hello from the payload!")
+    Logger.log("INFO", "Hello from the payload!")
 
 
 def debug_random_error(payload):
@@ -50,7 +52,7 @@ def request_time(payload):
 
 def request_payload_state(payload):
     """Request the current state of the payload."""
-    pass
+    
 
 
 def request_payload_monitoring_data(payload):

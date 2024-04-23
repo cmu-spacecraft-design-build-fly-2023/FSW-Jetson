@@ -17,6 +17,9 @@ if __name__ == "__main__":
 
     payload = PAYLOAD.Payload()
 
+    # Creating dummy tasks for demonstration
+    # self.DEBUG_tasks()
+
     # Create a new thread for running the payload
     payload_thread = threading.Thread(target=payload.run)
     payload_thread.daemon = True

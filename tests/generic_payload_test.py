@@ -1,36 +1,42 @@
 
 
-
+from flight.logger import Logger
 from flight.message_id import *
 from flight.task_map import ID_TASK_MAPPING
+from flight.command import Task
 
 import threading
 
-from flight.payload import Payload as PAYLOAD
+from flight.payload import Payload 
 
 
 
-def execute_command(payload, command_id):
+def add_command(payload, command_id, priority=50):
     """
-    Execute a command based on the command ID
+    Add a command based on the command ID
     """
     try:
-        task = ID_TASK_MAPPING[command_id]
-        payload.execute_task(task)
+        task_fct = ID_TASK_MAPPING[command_id]
     except KeyError:
-        print(f"Command ID {command_id} not found")
+        raise KeyError(f"Command ID {command_id} not found")
 
-
+    try:
+        task = Task(command_id, task_fct, None, priority=priority)
+        payload.command_queue.add_task(task)
+    except Exception as e:
+        raise e
 
 
 
 if __name__ == "__main__":
 
-    from flight.task_map import ID_TASK_MAPPING
-
     import threading
+    import time 
 
-    payload = PAYLOAD.Payload()
+
+    Logger.configure("DEBUG")
+
+    payload = Payload()
 
     # Create a new thread for running the payload
     payload_thread = threading.Thread(target=payload.run)
@@ -39,16 +45,24 @@ if __name__ == "__main__":
 
     print("Payload is running in a separate thread. Access the REPL below.")
 
+    # ADD COMMANDS PRIOR TO THE QUEUE HERE IF YOU WANT
+    # e.g. add_command(payload, DEBUG_HELLO)
+    add_command(payload, DEBUG_HELLO)
+
+
+    start_time = time.time()
+
     # REPL to execute user commands
     while True:
         try:
             user_input = input(">>> ")
             exec(user_input, globals(), locals())
 
+            # YOUR SPACE
 
-            
-
-
+            # If you want to send commands later, use the add_command(command_id) function within an if statement with time 
+            # e.g. add_command(payload, DEBUG_HELLO)
+            add_command(payload, DEBUG_HELLO)
 
 
 

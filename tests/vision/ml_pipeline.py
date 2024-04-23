@@ -25,13 +25,12 @@ import datetime
 import logging
 
 # Configure and initialize logger for demo
-Logger.configure(log_file="log/payload.log", log_level=logging.DEBUG)
+"""Logger.configure(log_level=logging.DEBUG, log_file="log/payload.log")
 Logger.initialize_log(
     module_name=sys.modules[__name__],
     init_msg="Logger purpose: To capture all operational logs for debugging and monitoring system performance.",
-)
+)"""
 
-Logger.log("ERROR", "This is an error message.")
 
 
 def get_latest_frame(image_dir):

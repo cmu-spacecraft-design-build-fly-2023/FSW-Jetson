@@ -74,9 +74,6 @@ class Payload:
         self.launch_camera()
         self.launch_UART_communication()"""
 
-        # Creating dummy tasks for demonstration
-        self.DEBUG_tasks()
-
         try:
             while True:
 
