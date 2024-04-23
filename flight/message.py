@@ -1,7 +1,7 @@
 """
-Payload Message Definition
+Payload Message Definition (ID)
 
-Description: This file defines the different type of messages and their IDs. For the transmitting message, it contains the mapping to the corresponding tasks.
+Description: This file defines the ID of the different types of messages. For the receiving message, it contains the mapping to the corresponding tasks.
 
 Author: Ibrahima S. Sow
 Date: [Creation or Last Update Date]

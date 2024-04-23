@@ -8,16 +8,14 @@ Date: [Creation or Last Update Date]
 import payload as PAYLOAD
 
 
-
-
 if __name__ == "__main__":
 
     import flight.message as msg
     from flight.task_map import ID_TASK_MAPPING
 
     import threading
+
     payload = PAYLOAD.Payload()
-    
 
     # Create a new thread for running the payload
     payload_thread = threading.Thread(target=payload.run)
