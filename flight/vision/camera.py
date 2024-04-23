@@ -319,18 +319,46 @@ class CameraManager:
         """
         return self.cameras.get(camera_id)
 
+    def run_live(self, save_frequency=10):
+        """
+        Run the camera manager to capture frames from all cameras.
+        """
+
+        while True:
+            start_time = time.time()
+            for camera_id, camera in self.cameras.items():
+                # Capture frame 
+                #camera.capture_frame()
+
+                if time.time() - start_time >= save_frequency:
+                    # Save frame 
+
+                    start_time = time.time()
+
+
+            if self.new_landmarked_data:
+                # update the display of the landmarked frame from its specific path 
+                pass
+
+            # Stop condition here
+            if self.stop_event.is_set():
+                break
+            
+    def stop_live(self):
+        self.stop_event.set()
+
+
+
+            
+
+
+
+
+
     def run_live_feeds(self):
         """
         Starts the live feed for all cameras and stores frames.
         """
-        # threads = []
-        # for camera_id, camera in self.cameras.items():
-        #     thread = threading.Thread(target=camera.get_live_feed)
-        #     threads.append(thread)
-        #     thread.start()
-        #     print(f"Live feed started for camera {camera_id}.")
-
-        # return threads
         for camera_id, camera in self.cameras.items():
             camera.get_live_feed()
 

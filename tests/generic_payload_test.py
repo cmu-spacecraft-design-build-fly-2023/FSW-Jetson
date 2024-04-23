@@ -33,9 +33,6 @@ if __name__ == "__main__":
     import threading
     import time 
 
-
-    Logger.configure("DEBUG")
-
     payload = Payload()
 
     # Create a new thread for running the payload

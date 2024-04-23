@@ -22,6 +22,8 @@ import flight.message_id as msg
 from flight.task_map import ID_TASK_MAPPING
 from flight.vision.camera import CameraManager
 
+from flight.logger import Logger
+
 
 # PAYLOAD STATES
 @unique
@@ -40,7 +42,7 @@ class Payload:
         self._state = PAYLOAD_STATE.STARTUP
         self._command_queue = CommandQueue()
         # self._communication = None
-        self._camera_manager = None
+        self._camera_manager = CameraManager([0,2,4,6,8,10])
         self._threads = []
 
         self.current_task_thread = None  # This will hold the current task's thread
@@ -70,9 +72,11 @@ class Payload:
 
         self.initialize()
 
-        """
+        
         self.launch_camera()
-        self.launch_UART_communication()"""
+
+
+        # self.launch_UART_communication()
 
         try:
             while True:
@@ -136,26 +140,33 @@ class Payload:
         self._state = PAYLOAD_STATE.NOMINAL
 
     def run_startup_health_procedure(self):
-        print("Running startup health checks...")
+        Logger.log("INFO", "Running startup health checks...")
         # Check status, ...
 
     def retrieve_internal_states(self):
-        print("Retrieving internal states...")
+        Logger.log("INFO", "Retrieving internal states...")
         #  Load configurations, last known states
 
+
+
     def launch_camera(self):
-        print("Launching camera manager...")
-        """camera_thread = threading.Thread(target=self._camera_manager.run)
+        Logger.log("INFO", "Launching camera manager...")
+        camera_thread = threading.Thread(target=self._camera_manager.run_live, args=(10,))
         camera_thread.start()
-        self._threads.append(camera_thread)"""
+        self._threads.append(camera_thread)
+
+    def stop_camera_operations(self):
+        Logger.log("INFO", "Stopping camera operations...")
+        self._camera_manager.stop_live()
+
 
     def launch_UART_communication(self):
         # Start UART communication state machne on its own thread
-        print("Initializing UART communication...")
+        Logger.log("INFO", "Initializing UART communication...")
         # TODO
         pass
 
     def cleanup(self):
         for thread in self._threads:
             thread.join()
-        print("All components cleanly shutdown.")
+        Logger.log("INFO", "All components cleanly shutdown.")
