@@ -22,6 +22,7 @@ from flight.logger import logger_instance as logger
 
 logger.clear_log()
 
+
 class InferenceRunner:
     """
     A class to perform landmark detection using a pretrained YOLO model.

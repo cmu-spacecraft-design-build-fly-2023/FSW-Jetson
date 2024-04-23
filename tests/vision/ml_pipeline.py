@@ -25,16 +25,19 @@ import datetime
 import logging
 
 # Configure and initialize logger for demo
-Logger.configure(log_file='log/demo_system.log', log_level=logging.DEBUG)
-Logger.initialize_log(module_name=sys.modules[__name__], init_msg="Logger purpose: To capture all operational logs for debugging and monitoring system performance.")
+Logger.configure(log_file="log/payload.log", log_level=logging.DEBUG)
+Logger.initialize_log(
+    module_name=sys.modules[__name__],
+    init_msg="Logger purpose: To capture all operational logs for debugging and monitoring system performance.",
+)
 
-Logger.log('ERROR', "This is an error message.")
+Logger.log("ERROR", "This is an error message.")
 
 
 def get_latest_frame(image_dir):
     frame_objects = {}
     # List all files in the directory and filter out non-jpg files
-    all_files = [f for f in os.listdir(image_dir) if f.endswith('.png')]
+    all_files = [f for f in os.listdir(image_dir) if f.endswith(".png")]
     # Optionally sort files if they are not in the desired order
     all_files.sort()
     # Process only the top five images
@@ -50,6 +53,7 @@ def get_latest_frame(image_dir):
         else:
             print(f"Failed to read image from {image_path}")
     return frame_objects
+
 
 def draw_landmarks_and_save(frame_obj, regions_and_landmarks, save_dir):
     """
@@ -71,7 +75,14 @@ def draw_landmarks_and_save(frame_obj, regions_and_landmarks, save_dir):
     image = frame_obj.frame.copy()
 
     # Define a list of colors for different regions (in BGR format)
-    colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (0, 255, 255), (255, 0, 255)]
+    colors = [
+        (255, 0, 0),
+        (0, 255, 0),
+        (0, 0, 255),
+        (255, 255, 0),
+        (0, 255, 255),
+        (255, 0, 255),
+    ]
 
     # Draw each landmark with a larger circle based on its region
     region_color_map = {}
@@ -81,7 +92,7 @@ def draw_landmarks_and_save(frame_obj, regions_and_landmarks, save_dir):
         color = colors[idx % len(colors)]
         region_color_map[region] = color  # Map region ID to color for legend
 
-        for (x, y) in detection_result.centroid_xy:
+        for x, y in detection_result.centroid_xy:
             cv2.circle(image, (int(x), int(y)), circle_radius, color, circle_thickness)
 
     # Add a larger legend to the image
@@ -90,7 +101,15 @@ def draw_landmarks_and_save(frame_obj, regions_and_landmarks, save_dir):
     font_scale = 1.5  # Increased font scale (3 times the original scale of 0.5)
     text_thickness = 3  # Thicker text for better visibility
     for region, color in region_color_map.items():
-        cv2.putText(image, f'Region {region}', (legend_x, legend_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, color, text_thickness)
+        cv2.putText(
+            image,
+            f"Region {region}",
+            (legend_x, legend_y),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            font_scale,
+            color,
+            text_thickness,
+        )
         legend_y += 40  # Increase spacing to prevent overlapping text entries
 
     # Generate a filename based on the frame ID and save the image
@@ -98,6 +117,7 @@ def draw_landmarks_and_save(frame_obj, regions_and_landmarks, save_dir):
     save_path = os.path.join(save_dir, filename)
     cv2.imwrite(save_path, image)
     print(f"Saved: {save_path}")
+
 
 if __name__ == "__main__":
     image_dir = "/home/riverflame/Spacecraft/FSW-Jetson/tests/vision/data/12R"
@@ -108,9 +128,9 @@ if __name__ == "__main__":
     latest_frames_w_id = get_latest_frame(image_dir)
     for camera_id, frame_obj in latest_frames_w_id.items():
         # Ensure that the frame_obj is an instance of Frame and has the necessary attributes
-        if isinstance(frame_obj, Frame) and hasattr(frame_obj, 'frame'):
+        if isinstance(frame_obj, Frame) and hasattr(frame_obj, "frame"):
             latest_frames.append(frame_obj)
-    
+
     ml_frames = processor.process_for_ml_pipeline(latest_frames)
 
     for frame_obj in ml_frames:

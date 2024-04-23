@@ -99,9 +99,7 @@ def run_rc_inference(image_dir):
                     ]
                 )
 
-    accuracy = (
-        (len(correct_predictions) / total_images) * 100 if total_images > 0 else 0
-    )
+    accuracy = (len(correct_predictions) / total_images) * 100 if total_images > 0 else 0
     print(f"\nAccuracy: {accuracy:.2f}%")
     return correct_predictions
 

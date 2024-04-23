@@ -55,9 +55,7 @@ def print_detected_landmarks(detection_results):
     print("-" * 100)  # Adjust the number based on your column widths
 
     # Rows
-    for landmark_cls, cent_xy, cent_latlon in zip(
-        landmark_classes, centroid_xy, centroid_latlons
-    ):
+    for landmark_cls, cent_xy, cent_latlon in zip(landmark_classes, centroid_xy, centroid_latlons):
         print(
             f"{landmark_cls:>10.2f} {cent_xy[0]:>10.2f} {cent_xy[1]:>10.2f} {cent_latlon[0]:>15.6f} {cent_latlon[1]:>15.6f}"
         )
@@ -86,9 +84,7 @@ def read_ground_truth(label_path, detected_classes, image_width, image_height):
                 continue
             actual_center_x = center_x * image_width
             actual_center_y = center_y * image_height
-            ground_truth_centroids.append(
-                (class_id, [actual_center_x, actual_center_y])
-            )
+            ground_truth_centroids.append((class_id, [actual_center_x, actual_center_y]))
             left = int((center_x - width / 2) * image_width)
             top = int((center_y - height / 2) * image_height)
             right = int((center_x + width / 2) * image_width)
@@ -113,9 +109,7 @@ def calculate_errors(detected_class_centroids, ground_truth_centroids):
     for detected_cls, detected_centroid in detected_class_centroids:
         for gt_cls, gt_centroid in ground_truth_centroids:
             if detected_cls == gt_cls:
-                error = np.linalg.norm(
-                    np.array(detected_centroid) - np.array(gt_centroid)
-                )
+                error = np.linalg.norm(np.array(detected_centroid) - np.array(gt_centroid))
                 class_errors[detected_cls] = error  # Store error by class
                 # Add error to the list for mean calculation
                 all_errors.append(error)
@@ -189,9 +183,7 @@ def evaluate_inference(
     detected_class_centroids = [
         (cls, centroid) for cls, centroid in zip(detected_classes, detected_centroids)
     ]
-    class_errors, mean_error = calculate_errors(
-        detected_class_centroids, ground_truth_centroids
-    )
+    class_errors, mean_error = calculate_errors(detected_class_centroids, ground_truth_centroids)
 
     if mean_error is not None:
         print(f"Mean pixel-wise error: {mean_error}")
@@ -201,25 +193,17 @@ def evaluate_inference(
     # Draw boxes if flag is set
     if draw_boxes_flag:
         img = draw_boxes(img, ground_truth_boxes, bounding_boxes)
-        save_path = os.path.join(
-            output_dir, f"{os.path.splitext(image_file)[0]}_result.jpg"
-        )
+        save_path = os.path.join(output_dir, f"{os.path.splitext(image_file)[0]}_result.jpg")
         img.save(save_path)
         print(f"Image with bounding boxes saved to {save_path}")
 
     # Write results to CSV
-    for (detected_cls, cent_xy), cent_latlon in zip(
-        detected_class_centroids, centroid_latlons
-    ):
+    for (detected_cls, cent_xy), cent_latlon in zip(detected_class_centroids, centroid_latlons):
         class_error = class_errors.get(
             detected_cls, float("nan")
         )  # Fetch the error for this specific class
         gt_centroid = next(
-            (
-                gt_cent
-                for gt_cls, gt_cent in ground_truth_centroids
-                if gt_cls == detected_cls
-            ),
+            (gt_cent for gt_cls, gt_cent in ground_truth_centroids if gt_cls == detected_cls),
             [float("nan"), float("nan")],
         )
         csv_writer.writerow(
@@ -425,9 +409,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-r", "--region", required=True, help="Region ID to test specific LD inference"
     )
-    parser.add_argument(
-        "--draw", action="store_true", help="Draw boxes and save result image"
-    )
+    parser.add_argument("--draw", action="store_true", help="Draw boxes and save result image")
     args = parser.parse_args()
 
     region_id = args.region

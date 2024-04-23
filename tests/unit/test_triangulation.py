@@ -40,6 +40,4 @@ def test_nadir_pointing_attitude(vec_to_align, nadir_dir, expected_result):
         with pytest.raises(ValueError):
             nadir_pointing_attitude(vec_to_align, nadir_dir)
     else:
-        assert np.allclose(
-            nadir_pointing_attitude(vec_to_align, nadir_dir), expected_result
-        )
+        assert np.allclose(nadir_pointing_attitude(vec_to_align, nadir_dir), expected_result)

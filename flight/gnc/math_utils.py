@@ -71,9 +71,7 @@ def geodesic_distance(q1: np.ndarray, q2: np.ndarray) -> float:
     return 1 - abs(np.dot(q1, q2))
 
 
-def random_rotation_matrix(
-    P: np.ndarray, Q0: np.ndarray = np.diag(np.ones(3))
-) -> np.ndarray:
+def random_rotation_matrix(P: np.ndarray, Q0: np.ndarray = np.diag(np.ones(3))) -> np.ndarray:
     Δ = cholesky(P, lower=True)
     ϕ = Δ @ np.random.randn(3, 1)
     rot = Q0 @ expm(skew_symmetric(ϕ))

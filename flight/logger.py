@@ -1,7 +1,7 @@
 """
 Logger Module
 
-This module provides a singleton Logger class that centralizes the logging process across various
+This module provides a Logger class that centralizes the logging process across various
 modules within a flight software system. The logger ensures that all log messages, irrespective of their
 origin, are uniformly directed to both the console and a log file, facilitating easier monitoring and debugging.
 The Logger adds the filename and line number of the logging call, making it easier to trace log messages.
@@ -33,30 +33,21 @@ Initialization:
     with `Logger.configure()` method to suit different operational needs such as during different phases of a mission.
 
 """
+
 import logging
 import os
 import inspect
 
+# Default configuration upon module load (can be reconfigured elsewhere in the code)
+# Logger.configure(log_file='log/payload.log', log_level=logging.DEBUG)
+
+
 class Logger:
-    _instance = None
     logger = None
-    log_file_path = None
+    log_file_path = "log/payload.log"
 
     @classmethod
-    def _get_instance(cls):
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
-
-    def __init__(self):
-        """Private initializer to prevent multiple instances."""
-        if self.__class__._instance is not None:
-            raise Exception("This class is a singleton!")
-        else:
-            self.__class__._instance = self
-
-    @classmethod
-    def configure(cls, log_file='log/demo_system.log', log_level=logging.INFO):
+    def configure(cls, log_file="log/payload.log", log_level=logging.INFO):
         """Configures the class logger with specific handlers and levels."""
         cls.log_file_path = os.path.join(os.getcwd(), log_file)
         # Create directory for log file if it does not exist
@@ -70,12 +61,15 @@ class Logger:
 
         # Create handlers
         c_handler = logging.StreamHandler()
-        f_handler = logging.FileHandler(cls.log_file_path, mode='a')  # Append mode
+        f_handler = logging.FileHandler(cls.log_file_path, mode="a")  # Append mode
         c_handler.setLevel(logging.INFO)
         f_handler.setLevel(log_level)
 
         # Create formatters and add them to handlers
-        formatter = logging.Formatter('%(asctime)s - %(caller)-28s - %(levelname)-8s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+        formatter = logging.Formatter(
+            "%(asctime)s - %(caller)-28s - %(levelname)-8s - %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
         c_handler.setFormatter(formatter)
         f_handler.setFormatter(formatter)
 
@@ -84,20 +78,13 @@ class Logger:
         cls.logger.addHandler(f_handler)
 
     @classmethod
-    def get_logger(cls):
-        """Returns the configured logger instance."""
-        if cls.logger is None:
-            cls.configure()
-        return cls.logger
-
-    @classmethod
     def log(cls, level, msg):
         """Logs a message with a specific level from anywhere in the code."""
         if cls.logger is None:
             cls.configure()
-        if level.upper() in ['INFO', 'DEBUG', 'WARNING', 'ERROR']:
+        if level.upper() in ["INFO", "DEBUG", "WARNING", "ERROR"]:
             caller_info = cls.get_caller_info()
-            cls.logger.log(getattr(logging, level.upper()), msg, extra={'caller': caller_info})
+            cls.logger.log(getattr(logging, level.upper()), msg, extra={"caller": caller_info})
         else:
             cls.logger.error("Invalid logging level specified.")
 
@@ -108,21 +95,18 @@ class Logger:
             caller_frame_record = inspect.stack()[2]  # Adjusted the index as needed
             frame = caller_frame_record[0]
             info = inspect.getframeinfo(frame)
-            return f'{os.path.basename(info.filename)}:{info.lineno:4d}'
+            return f"{os.path.basename(info.filename)}:{info.lineno:4d}"
         except IndexError:
-            return 'UnknownCaller:0'
+            return "UnknownCaller:0"
 
     @classmethod
     def initialize_log(cls, module_name, init_msg):
         """Initializes the log file with a specific message detailing the initialization context."""
         try:
-            with open(cls.log_file_path, 'w') as file:
+            with open(cls.log_file_path, "w") as file:
                 pass  # Clear the log file
-            cls.logger.info("Log file initialized.", extra={'caller': 'LoggerInit'})
-            cls.logger.info(f"Logger initialized by: {module_name}", extra={'caller': 'LoggerInit'})
-            cls.logger.info(init_msg, extra={'caller': 'LoggerInit'})
+            cls.logger.info("Log file initialized.", extra={"caller": "LoggerInit"})
+            cls.logger.info(f"Logger initialized by: {module_name}", extra={"caller": "LoggerInit"})
+            cls.logger.info(init_msg, extra={"caller": "LoggerInit"})
         except Exception as e:
-            cls.logger.error("Failed to initialize log file.", extra={'caller': 'LoggerError'})
-
-# Default configuration upon module load (can be reconfigured elsewhere in the code)
-Logger.configure(log_file='log/demo_system.log', log_level=logging.DEBUG)
+            cls.logger.error("Failed to initialize log file.", extra={"caller": "LoggerError"})

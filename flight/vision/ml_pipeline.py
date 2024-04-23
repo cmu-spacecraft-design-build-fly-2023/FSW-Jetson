@@ -17,6 +17,7 @@ from flight.vision.rc import RegionClassifier
 from flight.vision.ld import LandmarkDetector
 from flight import Logger
 
+
 class Landmark:
     """
     A class to store landmark info including centroid coordinates, geographic coordinates, and classes.
@@ -89,8 +90,8 @@ class MLPipeline:
             frame_results = []
             for region in pred_regions:
                 detector = LandmarkDetector(region_id=region)
-                centroid_xy, centroid_latlons, landmark_classes = (
-                    detector.detect_landmarks(frame_obj.frame)
+                centroid_xy, centroid_latlons, landmark_classes = detector.detect_landmarks(
+                    frame_obj.frame
                 )
                 landmark = Landmark(centroid_xy, centroid_latlons, landmark_classes)
                 frame_results.append((region, landmark))
@@ -108,15 +109,20 @@ class MLPipeline:
         Returns:
             tuple: The camera ID and the landmark detection results for the frame.
         """
-        Logger.log('INFO', "------------------------------Inference---------------------------------")
+        Logger.log(
+            "INFO",
+            "------------------------------Inference---------------------------------",
+        )
         pred_regions = self.classify_frame(frame_obj)
         frame_results = []
         for region in pred_regions:
             detector = LandmarkDetector(region_id=region)
-            centroid_xy, centroid_latlons, landmark_classes = detector.detect_landmarks(
-                frame_obj
-            )
-            if centroid_xy is not None and centroid_latlons is not None and landmark_classes is not None:
+            centroid_xy, centroid_latlons, landmark_classes = detector.detect_landmarks(frame_obj)
+            if (
+                centroid_xy is not None
+                and centroid_latlons is not None
+                and landmark_classes is not None
+            ):
                 landmark = Landmark(centroid_xy, centroid_latlons, landmark_classes)
                 frame_results.append((region, landmark))
             else:

@@ -26,22 +26,23 @@ NUM_CLASS = 16
 
 # Define error and info messages
 error_messages = {
-    'CONFIGURATION_ERROR': "Configuration error.",
-    'MODEL_LOADING_FAILED': "Failed to load model.",
-    'CLASSIFICATION_FAILED': "Classification process failed."
+    "CONFIGURATION_ERROR": "Configuration error.",
+    "MODEL_LOADING_FAILED": "Failed to load model.",
+    "CLASSIFICATION_FAILED": "Classification process failed.",
 }
 
 info_messages = {
-    'INITIALIZATION_START': "Initializing RegionClassifier.",
-    'MODEL_LOADED': "Model loaded successfully.",
-    'CLASSIFICATION_START': "Starting the classification process."
+    "INITIALIZATION_START": "Initializing RegionClassifier.",
+    "MODEL_LOADED": "Model loaded successfully.",
+    "CLASSIFICATION_START": "Starting the classification process.",
 }
 
 from torchvision.models import efficientnet_b0, EfficientNet_B0_Weights
 
-class SpacecraftClassifierEfficient(nn.Module):
+
+class ClassifierEfficient(nn.Module):
     def __init__(self, num_classes):
-        super(SpacecraftClassifierEfficient, self).__init__()
+        super(ClassifierEfficient, self).__init__()
         # Using new weights system
         weights = EfficientNet_B0_Weights.DEFAULT  # This uses the most up-to-date weights
         self.efficientnet = efficientnet_b0(weights=weights)
@@ -56,33 +57,35 @@ class SpacecraftClassifierEfficient(nn.Module):
         x = self.sigmoid(x)
         return x
 
+
 class RegionClassifier:
-    def __init__(self): 
-        Logger.log('INFO', info_messages['INITIALIZATION_START'])
+    def __init__(self):
+        Logger.log("INFO", info_messages["INITIALIZATION_START"])
 
         model_path, config_path = self.construct_paths()
 
         try:
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            self.model = SpacecraftClassifierEfficient(NUM_CLASS).to(self.device)
+            self.model = ClassifierEfficient(NUM_CLASS).to(self.device)
 
             # Load Custom model weights
             model_weights_path = os.path.join(model_path, "model_effnet_0.997_acc" + LD_MODEL_SUF)
             self.model.load_state_dict(torch.load(model_weights_path, map_location=self.device))
             self.model.eval()
-            Logger.log('INFO', info_messages['MODEL_LOADED'])
-            
+            Logger.log("INFO", info_messages["MODEL_LOADED"])
 
         except Exception as e:
-            Logger.log('ERROR', f"{error_messages['MODEL_LOADING_FAILED']}: {e}")
+            Logger.log("ERROR", f"{error_messages['MODEL_LOADING_FAILED']}: {e}")
             raise
 
         # Define the preprocessing
-        self.transforms = transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
+        self.transforms = transforms.Compose(
+            [
+                transforms.Resize((224, 224)),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ]
+        )
 
         self.region_ids = self.load_region_ids(config_path)
 
@@ -97,11 +100,14 @@ class RegionClassifier:
                 config = yaml.safe_load(file)
             return config.get("region_ids", [])
         except Exception as e:
-            Logger.log('ERROR', f"{error_messages['CONFIGURATION_ERROR']}: {e}")
+            Logger.log("ERROR", f"{error_messages['CONFIGURATION_ERROR']}: {e}")
             raise
 
     def classify_region(self, frame_obj):
-        Logger.log('INFO', f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {info_messages['CLASSIFICATION_START']}")
+        Logger.log(
+            "INFO",
+            f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {info_messages['CLASSIFICATION_START']}",
+        )
         predicted_region_ids = []
 
         try:
@@ -110,15 +116,17 @@ class RegionClassifier:
 
             with torch.no_grad():
                 outputs = self.model(img)
-                probabilities = torch.sigmoid(outputs)  
+                probabilities = torch.sigmoid(outputs)
                 predicted = (probabilities > 0.55).float()
                 predicted_indices = predicted.nonzero(as_tuple=True)[1]
                 predicted_region_ids = [self.region_ids[idx] for idx in predicted_indices]
 
         except Exception as e:
-            Logger.log('ERROR', f"{error_messages['CLASSIFICATION_FAILED']}: {e}")
+            Logger.log("ERROR", f"{error_messages['CLASSIFICATION_FAILED']}: {e}")
             raise
 
-        Logger.log('INFO', f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {predicted_region_ids} region(s) identified.")
+        Logger.log(
+            "INFO",
+            f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {predicted_region_ids} region(s) identified.",
+        )
         return predicted_region_ids
-

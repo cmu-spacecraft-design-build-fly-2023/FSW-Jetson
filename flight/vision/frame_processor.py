@@ -16,9 +16,10 @@ from flight import Logger
 
 # Define error messages
 error_messages = {
-    'CONVERSION_ERROR': "Error converting image to grayscale.",
-    'PROCESSING_ERROR': "Error during frame processing."
+    "CONVERSION_ERROR": "Error converting image to grayscale.",
+    "PROCESSING_ERROR": "Error during frame processing.",
 }
+
 
 class FrameProcessor:
     """
@@ -32,9 +33,7 @@ class FrameProcessor:
         Initializes the FrameProcessor class.
         """
 
-    def process_for_ml_pipeline(
-        self, frames, dark_threshold=0.5, brightness_threshold=60
-    ):
+    def process_for_ml_pipeline(self, frames, dark_threshold=0.5, brightness_threshold=60):
         """
         Processes frames to select those suitable for machine learning pipeline processing, based on darkness level and potentially other criteria. Each frame is a Frame object containing frame data and an ID.
 
@@ -56,14 +55,15 @@ class FrameProcessor:
                 if dark_percentage <= dark_threshold:
                     suitable_frames.append(frame_obj)
             except Exception as e:
-                Logger.log('ERROR', f"{error_messages['CONVERSION_ERROR']} or processing error: {e}")
+                Logger.log(
+                    "ERROR",
+                    f"{error_messages['CONVERSION_ERROR']} or processing error: {e}",
+                )
 
-        Logger.log('INFO', f"{len(suitable_frames)} frame(s) selected for ML Pipeline.")
+        Logger.log("INFO", f"{len(suitable_frames)} frame(s) selected for ML Pipeline.")
         return suitable_frames
 
-    def process_for_star_tracker(
-        self, frames, dark_threshold=0.5, brightness_threshold=60
-    ):
+    def process_for_star_tracker(self, frames, dark_threshold=0.5, brightness_threshold=60):
         """
         Processes frames to select those potentially suitable for star tracker processing or other uses where high darkness levels are acceptable or required. Each frame is a Frame object.
 
@@ -85,7 +85,10 @@ class FrameProcessor:
                 if dark_percentage > dark_threshold:
                     suitable_frames.append(frame_obj)
             except Exception as e:
-                Logger.log('ERROR', f"{error_messages['CONVERSION_ERROR']} or processing error: {e}")
-        
-        Logger.log('INFO', f"{len(suitable_frames)} frame(s) selected for Star Tracker.")
+                Logger.log(
+                    "ERROR",
+                    f"{error_messages['CONVERSION_ERROR']} or processing error: {e}",
+                )
+
+        Logger.log("INFO", f"{len(suitable_frames)} frame(s) selected for Star Tracker.")
         return suitable_frames

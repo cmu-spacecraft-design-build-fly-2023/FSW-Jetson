@@ -161,3 +161,6 @@ cython_debug/
 #.idea/
 
 tests/vision/inference_output/
+
+log/*
+data/*
