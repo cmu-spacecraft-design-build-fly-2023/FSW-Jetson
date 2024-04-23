@@ -42,7 +42,6 @@ def run_rc_inference(image_dir):
 
     # Extract region_ids from the configuration file
     region_ids = config.get("region_ids", [])
-    print(region_ids)
 
     if not region_ids:
         raise ValueError("No region IDs found in the configuration file.")

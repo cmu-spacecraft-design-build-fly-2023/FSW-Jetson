@@ -2,23 +2,13 @@ import cv2
 import os
 import yaml
 import time
+import hashlib
 from datetime import datetime
 import logging
 from typing import List
 import numpy as np
-
-
-logging.basicConfig(
-    filename="camera_errors.log",
-    level=logging.ERROR,
-    format="%(asctime)s - Camera %(name)s - %(levelname)s - %(message)s",
-)
-
-logging.basicConfig(
-    filename="camera_errors.log",
-    level=logging.ERROR,
-    format="%(asctime)s - Camera %(name)s - %(levelname)s - %(message)s",
-)
+import threading
+from flight import Logger
 
 
 class CameraErrorCodes:
@@ -48,6 +38,24 @@ class Frame:
         self.camera_id = camera_id
         self.frame = frame
         self.timestamp = timestamp
+        # Generate ID by hashing the timestamp
+        self.frame_id = self.generate_frame_id(timestamp)
+
+    def generate_frame_id(self, timestamp):
+        """
+        Generates a unique frame ID using the hash of the timestamp.
+
+        Args:
+            timestamp (datetime): The timestamp associated with the frame.
+
+        Returns:
+            str: A hexadecimal string representing the hash of the timestamp.
+        """
+        # Convert the timestamp to string and encode it to bytes, then hash it
+        timestamp_str = str(timestamp)
+        hash_object = hashlib.sha1(timestamp_str.encode())  # Using SHA-1
+        frame_id = hash_object.hexdigest()
+        return frame_id[:16]  # Optionally still shorten if needed
 
     def save(self):
         pass
@@ -58,17 +66,12 @@ class Camera:
         try:
             config = self.load_config(config_path)
         except Exception as e:
-            logging.error(
-                f"{error_messages[CameraErrorCodes.CONFIGURATION_ERROR]}: {e}"
-            )
-            logging.error(
-                f"{error_messages[CameraErrorCodes.CONFIGURATION_ERROR]}: {e}"
-            )
+            Logger.log("ERROR", f"{error_messages[CameraErrorCodes.CONFIGURATION_ERROR]}: {e}")
             raise ValueError(error_messages[CameraErrorCodes.CONFIGURATION_ERROR])
 
-
+        self.stop_event = threading.Event()
         self.camera_id = camera_id
-        self.image_folder = f"captured_images/camera_{camera_id}"
+        self.image_folder = f"data/camera_{camera_id}"
         os.makedirs(self.image_folder, exist_ok=True)
         self.max_startup_time = config["max_startup_time"]
         self.camera_settings = config["cameras"].get(camera_id, {})
@@ -81,6 +84,12 @@ class Camera:
         self.exposure = self.camera_settings.get("exposure")
         self.camera_status = self.initialize_camera()
         self._current_frame = None
+        self.all_frames = []
+
+        Logger.log(
+            "INFO",
+            f"Camera {camera_id}: Initialized with settings {self.camera_settings}",
+        )
 
     def load_config(self, config_path):
         with open(config_path, "r") as file:
@@ -88,7 +97,7 @@ class Camera:
 
     def log_error(self, error_code):
         message = error_messages.get(error_code, "Unknown error.")
-        logging.error(f"Camera {self.camera_id}: {message}")
+        Logger.log("ERROR", f"Camera {self.camera_id}: {message}")
 
     def initialize_camera(self):
         start_time = time.time()
@@ -97,19 +106,19 @@ class Camera:
             elapsed_time = (
                 time.time() - start_time
             ) * 1000  # Calculate elapsed time in milliseconds
-            elapsed_time = (
-                time.time() - start_time
-            ) * 1000  # Calculate elapsed time in milliseconds
+
             if elapsed_time <= self.max_startup_time:
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.resolution[0])
                 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.resolution[1])
+                Logger.log(
+                    "INFO",
+                    f"Camera {self.camera_id}: Successfully initialized within {self.max_startup_time} ms",
+                )
                 return 1
             else:
-                print(
-                    f"Camera {self.camera_id} initialization exceeded {self.max_startup_time} milliseconds."
-                )
-                print(
-                    f"Camera {self.camera_id} initialization exceeded {self.max_startup_time} milliseconds."
+                Logger.log(
+                    "ERROR",
+                    f"Camera {self.camera_id} initialization exceeded {self.max_startup_time} milliseconds.",
                 )
                 self.log_error(CameraErrorCodes.CAMERA_INITIALIZATION_FAILED)
                 return 0
@@ -129,7 +138,7 @@ class Camera:
                 return self.camera_status
         return self.camera_status
 
-    def capture_image(self):
+    def capture_frame(self):
         if self.check_operational_status():
             # cap = cv2.VideoCapture(self.camera_id)
             try:
@@ -137,22 +146,25 @@ class Camera:
                 if ret:
                     if not self.is_blinded_by_sun(frame):
                         timestamp = datetime.now()
-                        print(
-                            f"Image captured from camera {self.camera_id} at {timestamp}"
+                        Logger.log(
+                            "INFO",
+                            f"Camera {self.camera_id}: Frame captured at {timestamp}",
                         )
                         self.current_frame = Frame(frame, self.camera_id, timestamp)
+                        self.save_image(self.current_frame)
+                        self.all_frames.append(self.current_frame)
                     else:
-                        print(f"blinded by the lights")
+                        Logger.log("ERROR", f"Camera {self.camera_id}: Blinded by the lights")
                         self.log_error(CameraErrorCodes.SUN_BLIND)
                 else:
-                    print(f"Failed to capture image from camera {self.camera_id}")
+                    Logger.log("ERROR", f"Camera {self.camera_id}: Failed to capture image")
                     self.log_error(CameraErrorCodes.READ_FRAME_ERROR)
                     self.log_error(CameraErrorCodes.CAPTURE_FAILED)
                     self.camera_status = 0
             finally:
                 self.cap.release()
         else:
-            print(f"Camera {self.camera_id} is not operational.")
+            Logger.log("ERROR", f"Camera {self.camera_id}: Not operational.")
             self.log_error(CameraErrorCodes.CAMERA_NOT_OPERATIONAL)
         return self.camera_status
 
@@ -167,13 +179,9 @@ class Camera:
     def read_image_from_path(self):
         image_files = os.listdir(self.image_folder)
         if not image_files:
-            print(f"No images found for camera {self.camera_id}")
+            Logger.log("ERROR", f"Camera {self.camera_id}: No images found.")
             self.log_error(CameraErrorCodes.NO_IMAGES_FOUND)
             return None
-        latest_image_path = max(
-            [os.path.join(self.image_folder, filename) for filename in image_files],
-            key=os.path.getctime,
-        )
         latest_image_path = max(
             [os.path.join(self.image_folder, filename) for filename in image_files],
             key=os.path.getctime,
@@ -203,6 +211,26 @@ class Camera:
             return True"""
         return False
 
+    def save_image(self, target_frame):
+        frame = target_frame.frame
+        ts = target_frame.timestamp
+        image_name = f"{self.image_folder}/{ts}.jpg"
+        cv2.imwrite(image_name, frame)
+        Logger.log("INFO", f"Camera {self.camera_id}: Image saved as {image_name}")
+
+        self._maintain_image_limit(self.image_folder, 50)
+
+    def _maintain_image_limit(self, directory_path, limit=50):
+        files = [os.path.join(directory_path, f) for f in os.listdir(directory_path)]
+        # Sort files by creation time (oldest first)
+        files.sort(key=os.path.getctime)
+
+        # If more than `limit` files, remove the oldest ones
+        while len(files) > limit:
+            os.remove(files[0])
+            print(f"Deleted old image {files[0]} to maintain limit")
+            files.pop(0)
+
     # DEBUG only
     def get_live_feed(self):
         if self.check_operational_status():
@@ -211,13 +239,19 @@ class Camera:
             while self.cap.isOpened():
                 ret, frame = self.cap.read()
                 if ret:
+                    timestamp = datetime.now()
+                    curr_frame = Frame(frame, self.camera_id, timestamp)
+                    self.all_frames.append(curr_frame)
+                    self.save_image(curr_frame)
                     cv2.imshow(f"Live Feed from Camera {self.camera_id}", frame)
+
                 else:
                     print(f"Error reading frame from camera {self.camera_id}")
                     self.log_error(CameraErrorCodes.READ_FRAME_ERROR)
 
                     break
                 if cv2.waitKey(1) & 0xFF == ord("q"):
+                    # self.stop_event.set()
                     break
             self.cap.release()
             cv2.destroyAllWindows()
@@ -226,25 +260,34 @@ class Camera:
             self.log_error(CameraErrorCodes.CAMERA_NOT_OPERATIONAL)
         return self.camera_status
 
+    def stop_live_feed(self):
+        self.stop_event.set()
+
 
 class CameraManager:
 
-    def __init__(
-        self, camera_ids, config_path="configuration/camera_configuration.yml"
-    ):
+    def __init__(self, camera_ids, config_path="configuration/camera_configuration.yml"):
         self.cameras = {
-            camera_id: Camera(camera_id, config_path=config_path)
-            for camera_id in camera_ids
+            camera_id: Camera(camera_id, config_path=config_path) for camera_id in camera_ids
         }
         number_of_cameras = len(self.cameras)
         self.camera_frames = []
+        Logger.log("INFO", f"Camera Manager initialized.")
 
-    def capture_images(self):
+    def capture_frames(self):
         """
         capture stores images for all cameras given in the list
         """
         for camera_id, camera in self.cameras.items():
-            camera.capture_image()
+            camera.capture_frame()
+
+    def set_exposure(self):
+        for camera_id, camera in self.cameras.items():
+            camera.set_exposure()
+
+    # def enable_default_exposure(self):
+    #     for camera_id, camera in self.cameras.items():
+    #         camera.enable_default_exposure()
 
     def turn_on_cameras(self):
         """
@@ -276,21 +319,61 @@ class CameraManager:
         """
         return self.cameras.get(camera_id)
 
+    def run_live_feeds(self):
+        """
+        Starts the live feed for all cameras and stores frames.
+        """
+        # threads = []
+        # for camera_id, camera in self.cameras.items():
+        #     thread = threading.Thread(target=camera.get_live_feed)
+        #     threads.append(thread)
+        #     thread.start()
+        #     print(f"Live feed started for camera {camera_id}.")
+
+        # return threads
+        for camera_id, camera in self.cameras.items():
+            camera.get_live_feed()
+
+    def stop_all_feeds(self):
+        """
+        Stops all camera live feeds.
+        """
+        for camera_id, camera in self.cameras.items():
+            camera.stop_live_feed()
+            print(f"Live feed stopped for camera {camera_id}.")
+
+    def get_latest_frame(self):
+        """
+        Get the latest available image frame for each camera.
+        Returns:
+            A dictionary with camera IDs as keys and the latest frame object as values.
+        """
+        latest_frames = {}
+        for camera_id, camera in self.cameras.items():
+            if camera.all_frames:
+                # Get the last frame in the list
+                latest_frames[camera_id] = camera.all_frames[-1]
+            else:
+                print(f"No frames found for camera {camera_id}.")
+                camera.log_error(CameraErrorCodes.NO_IMAGES_FOUND)
+                latest_frames[camera_id] = None
+        return latest_frames
+
     def get_available_frames(self):
         """
         Get all available image frames for each camera.
         Returns:
             A dictionary with camera IDs as keys and lists of image paths as values.
         """
-        camera_frames = []
+        camera_frames = {}
         for camera_id, camera in self.cameras.items():
             try:
-                camera_frames.append(camera.current_frame)
+                # camera_frames.append(camera.current_frame)
+                camera_frames[camera_id] = camera.all_frames
             except:
-                print(
-                    f"No frames found for camera {camera_id}, or no images are present."
-                )
+                print(f"No frames found for camera {camera_id}, or no images are present.")
                 camera.log_error(CameraErrorCodes.NO_IMAGES_FOUND)
+                camera_frames[camera_id] = []
         return camera_frames
 
     # def return_status(self):

@@ -10,6 +10,7 @@ Date: [Creation or Last Update Date]
 from flight import message_id as msg_id
 import flight.tasks as tasks
 
+
 def get_task_from_id(id):
     """
     Returns the task function associated with the given task/message ID.

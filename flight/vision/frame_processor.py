@@ -12,6 +12,13 @@ Date: [Creation or Last Update Date]
 
 import cv2
 import numpy as np
+from flight import Logger
+
+# Define error messages
+error_messages = {
+    "CONVERSION_ERROR": "Error converting image to grayscale.",
+    "PROCESSING_ERROR": "Error during frame processing.",
+}
 
 
 class FrameProcessor:
@@ -26,44 +33,62 @@ class FrameProcessor:
         Initializes the FrameProcessor class.
         """
 
-    def process_for_ml_pipeline(self, frames_with_ids, dark_threshold=0.5, brightness_threshold=60):
+    def process_for_ml_pipeline(self, frames, dark_threshold=0.5, brightness_threshold=60):
         """
-        Processes frames to select those suitable for machine learning pipeline processing, based on darkness level and potentially other criteria. Each frame is associated with an ID.
+        Processes frames to select those suitable for machine learning pipeline processing, based on darkness level and potentially other criteria. Each frame is a Frame object containing frame data and an ID.
 
         Args:
-            frames_with_ids (list of tuples): The frames and their IDs to process, as a list of tuples, each containing a frame (np.array) and its associated ID.
+            frames (list of Frame): The frames to process, each a Frame object.
             dark_threshold (float, optional): The threshold for deciding if a frame is too dark for ML processing. Defaults to 0.5.
             brightness_threshold (int, optional): The pixel intensity threshold below which pixels are considered dark. Defaults to 60.
 
         Returns:
-            list of tuples: Each tuple consists of a frame suitable for ML pipeline processing and its associated ID.
+            list of Frame: Each Frame object suitable for ML pipeline processing.
         """
-        suitable_frames_with_ids = []
-        for frame, camera_id in frames_with_ids:
-            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            dark_percentage = np.sum(gray_frame < brightness_threshold) / np.prod(gray_frame.shape)
-            if dark_percentage <= dark_threshold:
-                suitable_frames_with_ids.append((frame, camera_id))
-        return suitable_frames_with_ids
+        suitable_frames = []
+        for frame_obj in frames:
+            try:
+                gray_frame = cv2.cvtColor(frame_obj.frame, cv2.COLOR_BGR2GRAY)
+                dark_percentage = np.sum(gray_frame < brightness_threshold) / np.prod(
+                    gray_frame.shape
+                )
+                if dark_percentage <= dark_threshold:
+                    suitable_frames.append(frame_obj)
+            except Exception as e:
+                Logger.log(
+                    "ERROR",
+                    f"{error_messages['CONVERSION_ERROR']} or processing error: {e}",
+                )
 
-    def process_for_star_tracker(
-        self, frames_with_ids, dark_threshold=0.5, brightness_threshold=60
-    ):
+        Logger.log("INFO", f"{len(suitable_frames)} frame(s) selected for ML Pipeline.")
+        return suitable_frames
+
+    def process_for_star_tracker(self, frames, dark_threshold=0.5, brightness_threshold=60):
         """
-        Processes frames to select those potentially suitable for star tracker processing or other uses where high darkness levels are acceptable or required. Each frame is associated with an ID.
+        Processes frames to select those potentially suitable for star tracker processing or other uses where high darkness levels are acceptable or required. Each frame is a Frame object.
 
         Args:
-            frames_with_ids (list of tuples): The frames and their IDs to process, as a list of tuples, each containing a frame (np.array) and its associated ID.
+            frames (list of Frame): The frames to process, each a Frame object.
             dark_threshold (float, optional): The threshold for selecting darker frames suitable for tasks like star tracking. Defaults to 0.5.
             brightness_threshold (int, optional): The pixel intensity threshold below which pixels are considered dark. Defaults to 60.
 
         Returns:
-            list of tuples: Each tuple consists of a frame suitable for star tracker processing or similar tasks and its associated ID.
+            list of Frame: Each Frame object suitable for star tracker processing or similar tasks.
         """
-        suitable_frames_with_ids = []
-        for frame, camera_id in frames_with_ids:
-            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            dark_percentage = np.sum(gray_frame < brightness_threshold) / np.prod(gray_frame.shape)
-            if dark_percentage > dark_threshold:
-                suitable_frames_with_ids.append((frame, camera_id))
-        return suitable_frames_with_ids
+        suitable_frames = []
+        for frame_obj in frames:
+            try:
+                gray_frame = cv2.cvtColor(frame_obj.frame, cv2.COLOR_BGR2GRAY)
+                dark_percentage = np.sum(gray_frame < brightness_threshold) / np.prod(
+                    gray_frame.shape
+                )
+                if dark_percentage > dark_threshold:
+                    suitable_frames.append(frame_obj)
+            except Exception as e:
+                Logger.log(
+                    "ERROR",
+                    f"{error_messages['CONVERSION_ERROR']} or processing error: {e}",
+                )
+
+        Logger.log("INFO", f"{len(suitable_frames)} frame(s) selected for Star Tracker.")
+        return suitable_frames

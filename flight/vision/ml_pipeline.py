@@ -15,6 +15,7 @@ from PIL import Image
 import cv2
 from flight.vision.rc import RegionClassifier
 from flight.vision.ld import LandmarkDetector
+from flight import Logger
 
 
 class Landmark:
@@ -59,61 +60,71 @@ class MLPipeline:
         """
         self.region_classifier = RegionClassifier()
 
-    def classify_frame(self, frame):
+    def classify_frame(self, frame_obj):
         """
         Classifies a frame to identify geographic regions using the region classifier.
 
         Args:
-            frame (np.array): The frame to classify, as a NumPy array.
+            frame_obj (Frame): The Frame object to classify.
 
         Returns:
             list: A list of predicted region IDs classified from the frame.
         """
-        frame_pil = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-        predicted_list = self.region_classifier.classify_region_ids(frame_pil)
+        predicted_list = self.region_classifier.classify_region(frame_obj)
         return predicted_list
 
-    def run_ml_pipeline_on_batch(self, frames_with_ids):
+    def run_ml_pipeline_on_batch(self, frames):
         """
         Processes a series of frames, classifying each for geographic regions and detecting landmarks,
         and returns the detection results along with camera IDs.
 
         Args:
-            frames_with_ids (list of tuples): A list where each element is a tuple consisting of
-                                              a frame (as a NumPy array) and its associated camera ID.
+            frames (list of Frame): A list of Frame objects.
 
         Returns:
             list of tuples: Each tuple consists of the camera ID and the landmark detection results for that frame.
         """
         results = []
-        for frame, camera_id in frames_with_ids:
-            pred_regions = self.classify_frame(frame)
+        for frame_obj in frames:
+            pred_regions = self.classify_frame(frame_obj)
             frame_results = []
             for region in pred_regions:
                 detector = LandmarkDetector(region_id=region)
-                centroid_xy, centroid_latlons, landmark_classes = detector.detect_landmarks(frame)
+                centroid_xy, centroid_latlons, landmark_classes = detector.detect_landmarks(
+                    frame_obj.frame
+                )
                 landmark = Landmark(centroid_xy, centroid_latlons, landmark_classes)
                 frame_results.append((region, landmark))
-            results.append((camera_id, frame_results))
+            results.append((frame_obj.camera_id, frame_results))
         return results
 
-    def run_ml_pipeline_on_single(self, frame_with_id):
+    def run_ml_pipeline_on_single(self, frame_obj):
         """
         Processes a single frame, classifying it for geographic regions and detecting landmarks,
         and returns the detection result along with the camera ID.
 
         Args:
-            frame_with_id (tuple): A tuple consisting of a frame (as a NumPy array) and its associated camera ID.
+            frame_obj (Frame): The Frame object to process.
 
         Returns:
             tuple: The camera ID and the landmark detection results for the frame.
         """
-        frame, camera_id = frame_with_id
-        pred_regions = self.classify_frame(frame)
+        Logger.log(
+            "INFO",
+            "------------------------------Inference---------------------------------",
+        )
+        pred_regions = self.classify_frame(frame_obj)
         frame_results = []
         for region in pred_regions:
             detector = LandmarkDetector(region_id=region)
-            centroid_xy, centroid_latlons, landmark_classes = detector.detect_landmarks(frame)
-            landmark = Landmark(centroid_xy, centroid_latlons, landmark_classes)
-            frame_results.append((region, landmark))
-        return (camera_id, frame_results)
+            centroid_xy, centroid_latlons, landmark_classes = detector.detect_landmarks(frame_obj)
+            if (
+                centroid_xy is not None
+                and centroid_latlons is not None
+                and landmark_classes is not None
+            ):
+                landmark = Landmark(centroid_xy, centroid_latlons, landmark_classes)
+                frame_results.append((region, landmark))
+            else:
+                continue
+        return frame_results
