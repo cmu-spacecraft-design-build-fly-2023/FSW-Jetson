@@ -20,7 +20,7 @@ from enum import Enum, unique
 from flight.command import CommandQueue, Task
 import flight.message_id as msg
 from flight.task_map import ID_TASK_MAPPING
-from flight.vision.camera.camera import CameraManager
+from flight.vision.camera import CameraManager
 
 
 # PAYLOAD STATES
