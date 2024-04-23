@@ -107,7 +107,6 @@ class UARTComm:
                 retries = 0
             else:
                 if retries >= MAX_RETRIES:
-                    self.close_logger()
                     raise RuntimeError("Unable to receive message")
                 # clear uart buffer
                 retries += 1
