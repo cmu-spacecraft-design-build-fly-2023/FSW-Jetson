@@ -8,6 +8,8 @@ Date: [Creation or Last Update Date]
 """
 
 from flight.logger import Logger
+from flight.demo_frames import get_latest_frame # Function to provide frames insequence
+from flight.vision import MLPipeline
 
 # TODO - fill in functions
 # TODO - Fill in the functions with the correct parameters and return types
@@ -135,10 +137,62 @@ def request_camera_status(payload):
 
 # Inference
 
+# =====unitility=====
+def parse_metadata(metadata_path):
+    """ Parse metadata file to extract camera ID, timestamp and frame ID """
+    with open(metadata_path, 'r') as file:
+        metadata = file.read()
+    lines = metadata.split('\n')
+    camera_id = int(lines[0].split(': ')[1])
+    timestamp = datetime.datetime.strptime(lines[1].split(': ')[1], '%Y-%m-%d %H:%M:%S.%f')
+    frame_id = lines[2].split(': ')[1]
+    return camera_id, timestamp, frame_id
+# =====unitility=====
+
+def run_ml_pipeline(payload):
+    """
+    Function to run ML pipeline on the latest frame retrieved from a cycling list of images.
+    """
+    pipeline = MLPipeline()
+    latest_frame = get_latest_frame()
+    if latest_frame is not None:
+        regions_and_landmarks = pipeline.run_ml_pipeline_on_single(latest_frame)
+        if regions_and_landmarks is not None:
+            pipeline.visualize_landmarks(latest_frame, regions_and_landmarks, "data/inference_output")
+    #else:
+    #    print("No frame available to process.")
 
 def request_landmarked_image(payload):
-    """Request a landmarked image."""
-    pass
+    """Request the latest landmarked image based on timestamp."""
+    image_dir = "data/inference_output"
+    metadata_dir = Path(image_dir)
+    latest_timestamp = None
+    latest_metadata_file = None
+
+    # Scan all metadata files to find the latest one
+    for metadata_file in metadata_dir.glob('frame_*.txt'):
+        camera_id, timestamp, frame_id = parse_metadata(metadata_file)
+        if latest_timestamp is None or timestamp > latest_timestamp:
+            latest_timestamp = timestamp
+            latest_metadata_file = metadata_file
+
+    if not latest_metadata_file:
+        return None
+
+    # Extract the frame ID from the file name
+    frame_id = latest_metadata_file.stem.split('_')[1]
+
+    # Load the corresponding image
+    image_path = metadata_dir / f'frame_{frame_id}.jpg'
+    image = cv2.imread(str(image_path))
+
+    if image is not None:
+        # Create and return the Frame object
+        camera_id, timestamp, frame_id = parse_metadata(latest_metadata_file)
+        return Frame(frame=image, camera_id=camera_id, timestamp=timestamp)
+    else:
+        print(f"Failed to load image from {image_path}")
+        return None
 
 
 def enable_region_x(payload):

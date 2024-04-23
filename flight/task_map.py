@@ -63,6 +63,8 @@ ID_TASK_MAPPING = {
     msg_id.DISABLE_CAMERA_X: tasks.disable_camera_x,
     msg_id.REQUEST_IMAGE_STORAGE_INFO: tasks.request_image_storage_info,
     msg_id.REQUEST_CAMERA_STATUS: tasks.request_camera_status,
+    # Inference 
+    msg_id.RUN_ML_PIPELINE: tasks.run_ml_pipeline,
     # ...
     # DEBUG ONLY
     msg_id.DEBUG_HELLO: tasks.debug_hello,

@@ -57,6 +57,7 @@ DISABLE_REGION_X = 0x42
 ENABLE_REGION_X = 0x43
 REQUEST_REGION_X_STATUS = 0x44  # If a landmark detector is really bad
 REQUEST_LAST_OBSERVATIONS_FILE = 0x45
+RUN_ML_PIPELINE = 0x46
 
 
 # Attitude and Orbit Estimation
