@@ -78,7 +78,8 @@ def request_payload_monitoring_data(payload):
     """Request the monitoring data of the payload."""
     data = payload.monitor()
     mtg_val = [data["RAM Usage (%)"], data["Disk Storage Usage (%)"], data["CPU Temperature (°C)"], data["GPU Temperature (°C)"]]
-    return enc.encode_diagnostic_data(mtg_val)
+    msg =  enc.encode_diagnostic_data(mtg_val)
+    payload.tx_queue.add_msg(msg)
 
 
 
@@ -125,7 +126,7 @@ def request_last_image(payload):
     if height != IMG_HEIGHT or width != IMG_WIDTH:
         img = cv2.resize(img, (IMG_WIDTH, IMG_HEIGHT))
 
-    return enc.encode_image_transmission_message(img)
+    payload.tx_queue.add_msg(enc.encode_image_transmission_message(img))
     
 
 

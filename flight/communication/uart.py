@@ -10,8 +10,6 @@ Date: [Creation or Last Update Date]
 import time
 import serial
 
-import threading
-
 from command import Task
 
 import flight.communication.message as mg
@@ -37,7 +35,6 @@ class UARTComm:
         self.port = port
         self.baudrate = baudrate
 
-        self._event_stop = threading.Event()
 
     def send_message(self, message) -> bool:
         """
@@ -144,40 +141,23 @@ class UARTComm:
 
             # TODO handle case with no success
 
-        return message
-
-    def run(self, payload_rx_queue, payload_tx_queue, period=10):
+        return message_type, message
+    
+    def available(self):
         """
-        Main loop for the UART communication module.
+        Checks if there are any messages available to be read.
 
-        Args:
-            payload_rx_queue (Queue): The queue to receive messages from to be converted to Tasks
-            payload_tx_queue (Queue): The queue to send messages to.
+        Returns:
+            bool: True if there are messages available, False otherwise.
         """
-        while not self._event_stop.is_set():
-
-            if not payload_tx_queue.is_empty():
-                msg = payload_tx_queue.get()
-                self.send_message(msg)
-
-            if self.uart.in_waiting > 0:
-                msg = self.receive_message()
-                payload_rx_queue.put(msg)
-                # TODO find message type       
-                # Create corresponding task 
-                # Put in the queue 
-
-            time.sleep(period)
-
-        self.uart.close()
+        return self.uart.in_waiting > 0
 
 
     def stop(self):
         """
         Stops the UART communication module.
         """
-        self._event_stop.set()
-        #self.uart.close()
+        self.uart.close()
 
 
 

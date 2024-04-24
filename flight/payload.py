@@ -18,8 +18,9 @@ import threading
 
 from enum import Enum, unique
 from flight.command import CommandQueue, Task, TX_Queue
+
 import flight.message_id as msg
-from flight.task_map import ID_TASK_MAPPING
+from flight.task_map import ID_TASK_MAPPING, get_task_from_id, ID_exists
 from flight.vision.camera import CameraManager
 
 from flight.communication.uart import UARTComm
@@ -46,11 +47,14 @@ class Payload:
         self._state = PAYLOAD_STATE.STARTUP
         self._command_queue = CommandQueue()
         self._tx_queue = TX_Queue()
-        # self._communication = UARTComm("/dev/ttyACM0")
+        self._communication = UARTComm("/dev/ttyACM0")
         self._current_task_thread = None
         self._camera_manager = CameraManager([0,2,4,6,8,10])
         self._threads = []
         self._idle_count = 0  # Counter before switching to IDLE state
+
+
+        self._com_event_stop = threading.Event()
         
 
     @property
@@ -174,9 +178,41 @@ class Payload:
     def launch_UART_communication(self):
         # Start UART communication state machne on its own thread
         Logger.log("INFO", "Initializing UART communication...")
-        uart_thread = threading.Thread(target=self._communication.run, args=(self.command_queue,self.tx_queue))
+        uart_thread = threading.Thread(target=self.run_UART_loop)
         uart_thread.start()
         self._threads.append(uart_thread)
+
+
+    def run_UART_loop(self, period=10):
+        """
+        Main loop for the UART communication.
+        """
+        while not self._event_stop.is_set():
+            
+
+            ## TX
+            if not self.tx_queue.is_empty():
+                msg = self.tx_queue.get_next()
+                if msg != None:
+                    self.communication.send_message(msg)
+
+            ## RX
+            if self.communication.available() > 0:
+                msg_type, msg = self.communication.receive_message()
+
+                if ID_exists(msg_type):
+                    # Add a command based on the command ID
+                    task_fct = get_task_from_id(msg_type)
+                    try:
+                        task = Task(self, msg_type, task_fct, None)
+                        self.command_queue.put(task)
+                    except Exception as e:
+                        Logger.log("ERROR", f"Failed to create task from message. {e}")
+                        raise e
+
+            time.sleep(period)
+
+        self.communication.stop()
 
 
     def cleanup(self):
