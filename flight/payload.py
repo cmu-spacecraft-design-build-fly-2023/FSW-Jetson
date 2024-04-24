@@ -69,6 +69,10 @@ class Payload:
         return self._send_queue
 
     @property
+    def camera_manager(self):
+        return self._camera_manager
+
+    @property
     def communication(self):
         return self._communication
 

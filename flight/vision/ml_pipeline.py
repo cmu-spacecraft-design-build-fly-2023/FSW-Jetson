@@ -16,6 +16,7 @@ import cv2
 from flight.vision.rc import RegionClassifier
 from flight.vision.ld import LandmarkDetector
 from flight import Logger
+import os
 
 
 class Landmark:
@@ -114,6 +115,12 @@ class MLPipeline:
             "------------------------------Inference---------------------------------",
         )
         pred_regions = self.classify_frame(frame_obj)
+        if len(pred_regions) == 0:
+            Logger.log(
+                "INFO",
+                f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] No landmarks detected. ",
+            )
+            return None
         frame_results = []
         for region in pred_regions:
             detector = LandmarkDetector(region_id=region)
@@ -128,3 +135,81 @@ class MLPipeline:
             else:
                 continue
         return frame_results
+
+    def visualize_landmarks(self, frame_obj, regions_and_landmarks, save_dir):
+        """
+        Draws larger centroids of landmarks on the frame, adds a larger legend for region colors, and saves the image.
+
+        Args:
+            frame_obj (Frame): The Frame object containing the image and metadata.
+            regions_and_landmarks (list of tuples): Each tuple contains a region ID and a LandmarkDetectionResult.
+            save_dir (str): Directory where the modified image will be saved.
+
+        Returns:
+            None
+        """
+        # Ensure the save directory exists
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        # Start with the original image from the frame object
+        image = frame_obj.frame.copy()
+
+        # Define a list of colors for different regions (in BGR format)
+        colors = [
+            (255, 0, 0),
+            (0, 255, 0),
+            (0, 0, 255),
+            (255, 255, 0),
+            (0, 255, 255),
+            (255, 0, 255),
+        ]
+
+        # Draw each landmark with a larger circle based on its region
+        region_color_map = {}
+        # Increased circle radius (3 times the original radius of 5)
+        circle_radius = 10
+        circle_thickness = -1  # Filled circle
+        for idx, (region, detection_result) in enumerate(regions_and_landmarks):
+            color = colors[idx % len(colors)]
+            region_color_map[region] = color  # Map region ID to color for legend
+
+            for x, y in detection_result.centroid_xy:
+                cv2.circle(image, (int(x), int(y)), circle_radius, color, circle_thickness)
+
+        # Add a larger legend to the image
+        legend_x = 10
+        legend_y = 50  # Start a bit lower to accommodate larger text
+        # Increased font scale (3 times the original scale of 0.5)
+        font_scale = 1.5
+        text_thickness = 3  # Thicker text for better visibility
+        for region, color in region_color_map.items():
+            cv2.putText(
+                image,
+                f"Region {region}",
+                (legend_x, legend_y),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                font_scale,
+                color,
+                text_thickness,
+            )
+            legend_y += 40  # Increase spacing to prevent overlapping text entries
+
+        # Generate a filename based on the frame ID and save the image
+        landmark_save_path = os.path.join(save_dir, "frame_w_landmarks.jpg")
+        cv2.imwrite(landmark_save_path, image)
+
+        img_save_path = os.path.join(save_dir, "frame.jpg")
+        cv2.imwrite(img_save_path, frame_obj.frame)
+
+        # Save the metadata to a text file
+        metadata_path = os.path.join(save_dir, "frame_metadata.txt")
+        with open(metadata_path, 'w') as f:
+            f.write(f"Camera ID: {frame_obj.camera_id}\n")
+            f.write(f"Timestamp: {frame_obj.timestamp}\n")
+            f.write(f"Frame ID: {frame_obj.frame_id}\n")
+
+        Logger.log(
+            "INFO",
+            f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] Landmark visualization saved to data/inference_output",
+        )

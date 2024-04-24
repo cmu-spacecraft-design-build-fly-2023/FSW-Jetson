@@ -99,7 +99,7 @@ def draw_landmarks_and_save(frame_obj, regions_and_landmarks, save_dir):
     legend_x = 10
     legend_y = 50  # Start a bit lower to accommodate larger text
     # Increased font scale (3 times the original scale of 0.5)
-    font_scale = 1.5
+    font_scale = 1
     text_thickness = 3  # Thicker text for better visibility
     for region, color in region_color_map.items():
         cv2.putText(
