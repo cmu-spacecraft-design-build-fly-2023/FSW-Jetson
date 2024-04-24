@@ -1,67 +1,89 @@
+"""
+Jetson Metrics Module
+
+This module provides a class, JetsonMetrics, that facilitates monitoring of various system metrics on NVIDIA Jetson devices. 
+It utilizes the jtop library to access real-time performance data including RAM usage, disk storage, and temperatures for CPU and GPU.
+
+Dependencies:
+    - jtop: Required for accessing Jetson hardware statistics. Install via pip using `pip install jetson-stats`.
+
+Usage:
+    ```python
+    from jetson_metrics import JetsonMetrics
+
+    if __name__ == '__main__':
+        with JetsonMetrics() as metrics:
+            all_metrics = metrics.get_all_metrics()
+            for key, value in all_metrics.items():
+                print(f"{key}: {value}")
+    ```
+
+    This will output:
+    - RAM Usage (%)
+    - Disk Storage Usage (%)
+    - CPU Temperature (°C)
+    - GPU Temperature (°C)
+
+Note:
+    Ensure that the `jtop` daemon is running on Jetson device (run `sudo jtop` if not already started) to enable access to the system metrics.
+
+Author(s): Eddie, Sachit
+Date: [Creation or Last Update Date]
+"""
 from jtop import jtop
-import copy
+import os
 
-#additional per cpu metrics user, nice, system utilization 
-"""def cpu_metrics(metrics_requested = {'online', 'idle'}):
-    jetson = jtop()
-    jetson.start()
-    compute_metrics = jetson.cpu
-    jetson.close() 
-    result = dict()
-    result['total'] = dict()
-    result['total'] = copy.copy(compute_metrics['total'])
-    currCpuCount = 0
-    for cpu_metrics in compute_metrics['cpu']:
-        currCpuDict = f'cpu{currCpuCount}'
-        result[currCpuDict] = dict()
-        for metric in cpu_metrics:
-            if metric in metrics_requested:
-                result[currCpuDict][metric] = cpu_metrics[metric]
-        currCpuCount += 1
-    return result
+class JetsonMetrics:
+    def __init__(self):
+        self.jetson = jtop()
+        self.jetson.start()
 
-#additional metrics min_freq, max_freq
-def gpu_metrics(metrics_requested = {'load', 'curr_freq'}):
-    result = dict()
-    result['gpu'] = dict()
-    jetson = jtop()
-    jetson.start()
-    gpu_metrics = jetson.gpu['gpu']
-    freq_metrics = gpu_metrics['freq']
-    jetson.close()
-    if 'load' in metrics_requested:
-        result['gpu'] = gpu_metrics['status']['load']
-    if 'curr_freq' in metrics_requested:
-        result['curr_freq'] = freq_metrics['cur']
-    if 'min_freq' in metrics_requested:
-        result['min_freq'] = freq_metrics['min']
-    if 'max_freq' in metrics_requested:
-        result['max_freq'] = freq_metrics['max']
-    return result
+    def __enter__(self):
+        return self
 
-#for RAM can have shared, used, buffers, cached
-#temperature devices- cpu, gpu, soc1, soc2, soc0
-def misc_metrics(ram_metrics_requested = {'tot', 'free'} , 
-                temp_devices_requested = {'cpu', 'gpu', 'soc1', 'soc2', 'soc0'}):
-    result = dict()
-    jetson = jtop()
-    jetson.start()
-    ram_metrics = jetson.memory['RAM']
-    temp_metrics = jetson.temperature
-    jetson.close()
-    result['RAM'] = dict()
-    for metric in ram_metrics:
-        if metric in ram_metrics_requested:
-            result['RAM'][metric] = ram_metrics[metric]
-    result['Temperature'] = dict()
-    for device in temp_metrics:
-        if temp_metrics[device]['online'] == False:
-            continue
-        if device in temp_devices_requested:
-            result['Temperature'][device] = temp_metrics[device]['temp']
-    return result
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.jetson.close()
 
+    def get_ram_usage_percentage(self):
+        """ Returns the percentage of RAM used as an integer """
+        ram = self.jetson.memory['RAM']
+        return int((ram['used'] / ram['tot']) * 100) if ram['tot'] > 0 else 0
+
+    def get_disk_storage_percentage(self):
+        """ Returns the disk storage usage as a percentage of total disk space, rounded to the nearest integer """
+        statvfs = os.statvfs('/')
+        total = statvfs.f_blocks * statvfs.f_frsize
+        free = statvfs.f_bfree * statvfs.f_frsize
+        used = total - free
+        disk_usage_percentage = (used / total) * 100 if total > 0 else 0
+        return int(disk_usage_percentage)
+
+    def get_cpu_temperature(self):
+        """ Returns the CPU temperature rounded to the nearest integer, if available """
+        temps = self.jetson.temperature
+        return int(temps['cpu']['temp']) if 'cpu' in temps and temps['cpu']['online'] else None
+
+    def get_gpu_temperature(self):
+        """ Returns the GPU temperature rounded to the nearest integer, if available """
+        temps = self.jetson.temperature
+        return int(temps['gpu']['temp']) if 'gpu' in temps and temps['gpu']['online'] else None
+
+    def close(self):
+        """ Closes the jtop connection """
+        self.jetson.close()
+
+    def get_all_metrics(self):
+        """ Returns all relevant metrics in a dictionary """
+        return {
+            "RAM Usage (%)": self.get_ram_usage_percentage(),
+            "Disk Storage Usage (%)": self.get_disk_storage_percentage(),
+            "CPU Temperature (°C)": self.get_cpu_temperature(),
+            "GPU Temperature (°C)": self.get_gpu_temperature()
+        }
+
+# Usage
 if __name__ == '__main__':
-    print(cpu_metrics())
-    print(gpu_metrics())
-    print(misc_metrics())"""
+    with JetsonMetrics() as metrics:
+        all_metrics = metrics.get_all_metrics()
+        for key, value in all_metrics.items():
+            print(f"{key}: {value}")
