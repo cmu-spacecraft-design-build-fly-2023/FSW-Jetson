@@ -121,7 +121,8 @@ def draw_landmarks_and_save(frame_obj, regions_and_landmarks, save_dir):
 
 
 if __name__ == "__main__":
-    image_dir = "/home/riverflame/Spacecraft/FSW-Jetson/tests/vision/data/12R"
+    relative_path = "/tests/vision/data/12R"
+    image_dir = os.path.join(os.getcwd(), relative_path.strip("/"))
     processor = FrameProcessor()
     pipeline = MLPipeline()
 
