@@ -7,18 +7,28 @@ Author: Ibrahima S. Sow
 Date: [Creation or Last Update Date]
 """
 
-from flight.logger import Logger
-from flight.vision.demo_frames import demo_frames # Function to provide frames insequence
-from flight.vision import MLPipeline
-from flight.vision.camera import Frame
 import os
 import cv2
 import datetime
-from pathlib import Path
+
+
+from flight.logger import Logger
+
+
+import flight.communication.encoding as enc
+
+
+from flight.vision.demo_frames import demo_frames  # Function to provide frames insequence
+from flight.vision import MLPipeline
+from flight.vision.camera import Frame
 
 
 # TODO - fill in functions
 # TODO - Fill in the functions with the correct parameters and return types
+
+## Constants
+IMG_WIDTH = 640
+IMG_HEIGHT = 480
 
 
 # DEBUG
@@ -60,12 +70,20 @@ def request_time(payload):
 
 def request_payload_state(payload):
     """Request the current state of the payload."""
-    
+    return payload.state
 
 
 def request_payload_monitoring_data(payload):
     """Request the monitoring data of the payload."""
-    pass
+    data = payload.monitor()
+    mtg_val = [
+        data["RAM Usage (%)"],
+        data["Disk Storage Usage (%)"],
+        data["CPU Temperature (°C)"],
+        data["GPU Temperature (°C)"],
+    ]
+    msg = enc.encode_diagnostic_data(mtg_val)
+    payload.tx_queue.add_msg(msg)
 
 
 def restart_payload(payload):
@@ -88,12 +106,28 @@ def delete_all_logs(payload):
 
 def capture_and_send_image(payload):
     """Capture and send an image."""
-    pass
+    cm = payload.camera_manager
+    print("latest frame captures and returned ")
+    return cm.get_latest_frames()
 
 
 def request_last_image(payload):
     """Request the last image."""
-    pass
+    cm = payload.camera_manager
+    # TODO THE IMAGE SELECTION IS HARDCODED ONLY FOR THE DEMO - REMOVE THIS
+    img = cm.get_latest_images()[0]
+
+    if img is None:
+        Logger.log("ERROR", "No image available.")
+        return None
+
+    height, width, _ = img.shape
+
+    # Check if image dimensions are correct
+    if height != IMG_HEIGHT or width != IMG_WIDTH:
+        img = cv2.resize(img, (IMG_WIDTH, IMG_HEIGHT))
+
+    payload.tx_queue.add_msg(enc.encode_image_transmission_message(img))
 
 
 def request_image_metadata(payload):
@@ -103,12 +137,15 @@ def request_image_metadata(payload):
 
 def turn_on_cameras(payload):
     """Turn on the cameras."""
-    pass
+    cm = payload.camera_manager
+    cm.turn_on_cameras()
+    cm.set_flag()
 
 
 def turn_off_cameras(payload):
     """Turn off the cameras."""
-    pass
+    cm = payload.camera_manager
+    cm.turn_off_cameras()
 
 
 def request_image_storage_info(payload):
@@ -138,10 +175,14 @@ def disable_camera_x(payload):
 
 def request_camera_status(payload):
     """Request the status of the camera."""
-    pass
+    cm = payload.camera_manager
+    status = cm.get_status()
+    Logger.log("INFO", f"Camera status: {status}")
+    return status
 
 
 # Inference
+
 
 def run_ml_pipeline(payload):
     """
@@ -152,9 +193,14 @@ def run_ml_pipeline(payload):
     if latest_frame is not None:
         regions_and_landmarks = pipeline.run_ml_pipeline_on_single(latest_frame)
         if regions_and_landmarks is not None:
-            pipeline.visualize_landmarks(latest_frame, regions_and_landmarks, "data/inference_output")
-    #else:
+            pipeline.visualize_landmarks(
+                latest_frame, regions_and_landmarks, "data/inference_output"
+            )
+            cm = payload.camera_manager()
+            cm.set_flag()
+    # else:
     #    print("No frame available to process.")
+
 
 def request_landmarked_image(payload):
     """Request a landmarked image and return a Frame object containing the image and its metadata."""
@@ -172,11 +218,11 @@ def request_landmarked_image(payload):
     if not os.path.exists(metadata_path):
         Logger.log("ERROR", "The metadata file was not found.")
         return None
-    
+
     metadata = {}
-    with open(metadata_path, 'r') as f:
+    with open(metadata_path, "r") as f:
         for line in f:
-            key, value = line.strip().split(': ')
+            key, value = line.strip().split(": ")
             metadata[key] = value
 
     # Extract metadata information

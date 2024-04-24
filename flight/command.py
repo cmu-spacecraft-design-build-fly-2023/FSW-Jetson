@@ -12,7 +12,6 @@ import threading
 import time
 
 
-
 # TODO use logger on DEBUG instead of print statements
 class Task:
     def __init__(self, payload, task_id, function, data=None, priority=100):
@@ -28,7 +27,7 @@ class Task:
         """Execute the task's function with the provided data, with retry logic."""
         self.attempts += 1
         try:
-            result = self.function(self.payload) # for now ignore the data argument :: , self.data
+            result = self.function(self.payload)  # for now ignore the data argument :: , self.data
             print(f"Task {self.task_id} completed successfully on attempt {self.attempts}.")
             return result
         except Exception as e:
@@ -132,5 +131,3 @@ class TX_Queue:
     def clear(self):
         with self.lock:
             self.queue.queue.clear()
-
-

@@ -32,7 +32,6 @@ Logger.initialize_log(
 )"""
 
 
-
 def get_latest_frame(image_dir):
     frame_objects = {}
     # List all files in the directory and filter out non-jpg files

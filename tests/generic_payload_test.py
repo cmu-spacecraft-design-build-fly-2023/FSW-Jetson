@@ -1,4 +1,7 @@
+import sys
+import os
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from flight.logger import Logger
 from flight.message_id import *
@@ -7,8 +10,7 @@ from flight.command import Task
 
 import threading
 
-from flight.payload import Payload 
-
+from flight.payload import Payload
 
 
 def add_command(payload, command_id, priority=50):
@@ -27,11 +29,10 @@ def add_command(payload, command_id, priority=50):
         raise e
 
 
-
 if __name__ == "__main__":
 
     import threading
-    import time 
+    import time
 
     payload = Payload()
 
@@ -45,9 +46,14 @@ if __name__ == "__main__":
     # ADD COMMANDS PRIOR TO THE QUEUE HERE IF YOU WANT
     # e.g. add_command(payload, DEBUG_HELLO)
     add_command(payload, DEBUG_HELLO)
-    
-    add_command(payload, RUN_ML_PIPELINE)
-    add_command(payload, REQUEST_LANDMARKED_IMAGE)
+    add_command(payload, REQUEST_PAYLOAD_STATE)
+    """add_command(payload,CAPTURE_AND_SEND_IMAGE)
+    add_command(payload,REQUEST_LAST_IMAGE)
+    add_command(payload,TURN_OFF_CAMERAS)
+    add_command(payload,TURN_ON_CAMERAS)"""
+
+    # add_command(payload, RUN_ML_PIPELINE)
+    # add_command(payload, REQUEST_LANDMARKED_IMAGE)
 
     start_time = time.time()
 
@@ -59,13 +65,9 @@ if __name__ == "__main__":
 
             # YOUR SPACE
 
-            # If you want to send commands later, use the add_command(command_id) function within an if statement with time 
+            # If you want to send commands later, use the add_command(command_id) function within an if statement with time
             # e.g. add_command(payload, DEBUG_HELLO)
-            
-            
 
-
-            
         except KeyboardInterrupt:
             print("\nExiting REPL...")
             break
