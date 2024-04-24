@@ -288,7 +288,7 @@ class MLPipeline:
         cv2.imwrite(img_save_path, frame_obj.frame)
 
         metadata_path = os.path.join(save_dir, "frame_metadata.txt")
-        with open(metadata_path, 'w') as f:
+        with open(metadata_path, "w") as f:
             f.write(f"Camera ID: {frame_obj.camera_id}\n")
             f.write(f"Timestamp: {frame_obj.timestamp}\n")
             f.write(f"Frame ID: {frame_obj.frame_id}\n")

@@ -9,7 +9,8 @@ from typing import List
 import numpy as np
 import threading
 import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from logger import Logger
 
 
@@ -68,6 +69,10 @@ class Frame:
     def save(self):
         pass
 
+    @classmethod
+    def resize(cls, img, width=640, height=480):
+        return cv2.resize(img, (width, height), interpolation=cv2.INTER_AREA)
+
 
 class Camera:
     def __init__(self, camera_id, config_path):
@@ -84,7 +89,7 @@ class Camera:
         self.max_startup_time = config["max_startup_time"]
         self.camera_settings = config["cameras"].get(camera_id, {})
         if self.camera_settings != {}:
-        
+
             self.resolution = (
                 self.camera_settings["resolution"]["width"],
                 self.camera_settings["resolution"]["height"],
@@ -127,7 +132,7 @@ class Camera:
                     "INFO",
                     f"Camera {self.camera_id}: Successfully initialized within {self.max_startup_time} ms",
                 )
-                status =  1
+                status = 1
                 return status
             else:
                 Logger.log(
@@ -141,7 +146,9 @@ class Camera:
 
     def check_operational_status(self):
         if not hasattr(self, "cap") or not self.cap.isOpened():
-            self.cap = cv2.VideoCapture(self.camera_id) ## This line shouldn't be there as it takes too much time to create a new video capture object
+            self.cap = cv2.VideoCapture(
+                self.camera_id
+            )  ## This line shouldn't be there as it takes too much time to create a new video capture object
             if self.cap.isOpened():
                 self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.resolution[0])
                 self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.resolution[1])
@@ -166,11 +173,11 @@ class Camera:
                 ret, frame = self.cap.read()
                 if ret:
                     timestamp = datetime.now()
-                    #Logger.log("INFO", f"Camera {self.camera_id}: Frame captured at {timestamp}")
-                    
+                    # Logger.log("INFO", f"Camera {self.camera_id}: Frame captured at {timestamp}")
+
                     self.current_frame = Frame(frame, self.camera_id, timestamp)
-                    #self.save_image(self.current_frame)
-                    #self.all_frames.append(self.current_frame)
+                    # self.save_image(self.current_frame)
+                    # self.all_frames.append(self.current_frame)
                     return self.current_frame
 
                 else:
@@ -187,7 +194,6 @@ class Camera:
         else:
             Logger.log("ERROR", f"Camera {self.camera_id}: Not operational.")
             self.log_error(CameraErrorCodes.CAMERA_NOT_OPERATIONAL)
-        
 
     @property
     def current_frame(self):
@@ -197,7 +203,7 @@ class Camera:
     def current_frame(self, value):
         self._current_frame = value
 
-    def read_image_from_path(self):
+    def get_latest_image(self):
         image_files = os.listdir(self.image_folder)
         if not image_files:
             Logger.log("ERROR", f"Camera {self.camera_id}: No images found.")
@@ -243,7 +249,7 @@ class Camera:
 
     # DEBUG only
     def get_live_feed(self):
-        if self.check_operational_status():        
+        if self.check_operational_status():
             ret, frame = self.cap.read()
             if ret:
                 timestamp = datetime.now()
@@ -254,7 +260,6 @@ class Camera:
         else:
             Logger.log("ERROR", f"Camera {self.camera_id} is not operational.")
             self.log_error(CameraErrorCodes.CAMERA_NOT_OPERATIONAL)
-        
 
     def stop_live_feed(self):
         self.stop_event = True
@@ -273,8 +278,16 @@ class CameraManager:
 
         number_of_cameras = len(self.cameras)
         self.camera_frames = []
-        self.stop_event = False 
+        self.stop_event = False
+        self.inf_flag = False
+        self.ML_image_path = "data/inference_output/frames_w_landmarks.jpg"
         Logger.log("INFO", f"Camera Manager initialized.")
+
+    def get_status(self):
+        status = []
+        for camera_id, camera in self.cameras.items():
+            status.append(camera.camera_status)
+        return status
 
     def capture_frames(self):
         """
@@ -303,13 +316,18 @@ class CameraManager:
             status_list.append(status == 1)
         return status_list
 
-    def turn_off_cameras(self, camera_ids: List[int]):
+    def set_flag(self):
+        self.inf_flag = True
+
+    def kill_flag(self):
+        self.inf_flag = False
+
+    def turn_off_cameras(self):
         """
         Release cameras of given IDs
         """
-        for camera_id in camera_ids:
-            camera = self.cameras.get(camera_id)
-            if camera is not None and hasattr(camera, "cap") and camera.cap.isOpened():
+        for camera_id, camera in self.cameras.items():
+            if hasattr(camera, "cap") and camera.cap.isOpened():
                 camera.cap.release()
                 Logger.log("INFO", f"Camera {camera_id} turned off.")
 
@@ -321,13 +339,12 @@ class CameraManager:
         """
         return self.cameras.get(camera_id)
 
-    def run_live(self, save_frequency= 10):
+    def run_live(self, save_frequency=10):
         """
         Run the camera manager to capture frames from all cameras.
         """
         start_time = time.time()
-        
-        
+
         while not self.stop_event:
             frame_list = []
             for camera_id, camera in self.cameras.items():
@@ -335,38 +352,58 @@ class CameraManager:
                     resulting_frame = camera.capture_frame()
                     if resulting_frame == None:
                         continue
-                    cv2.imshow(f"Camera {camera.camera_id}",resulting_frame.frame)
+                    cv2.imshow(f"Camera {camera.camera_id}", resulting_frame.frame)
                     frame_list.append(resulting_frame)
+            # if self.inf_flag:
+            #     img = cv2.imread(self.ML_image_path)
+            #     cv2.imshow(f"ML result ",img)
+            # else:
+            #     cv2.destroyWindow("ML result")
 
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            if self.inf_flag:
+                img = cv2.imread(self.ML_image_path)
+                if img is not None:
+                    cv2.imshow("Landmark detection result", img)
+                else:
+                    Logger.log("WARNING", f"Failed to load image from {self.ML_image_path}")
+            else:
+                # Display an empty black image to 'hide' the window content
+                empty_image = np.zeros((100, 100, 3), dtype=np.uint8)
+                cv2.imshow("Landmark detection result", empty_image)
+
+            if cv2.waitKey(1) & 0xFF == ord("q"):
                 self.stop_event = True
-
 
             if (time.time() - start_time) > save_frequency:
                 start_time = time.time()
                 for fr in frame_list:
                     self.save_image(fr, f"data/camera_{fr.camera_id}/{fr.timestamp}.png")
 
-                    
             # if self.new_landmarked_data:
-            #     # update the display of the landmarked frame from its specific path 
+            #     # update the display of the landmarked frame from its specific path
             #     pass
-        
+
         for camera_id, camera in self.cameras.items():
             camera.cap.release()
 
         cv2.destroyAllWindows()
 
-
     def save_image(self, frame_obj, img_path):
         cv2.imwrite(img_path, frame_obj.frame)
         Logger.log("INFO", f"Camera {frame_obj.camera_id}: Image saved at {img_path}")
-   
+
     def stop_live(self):
         self.stop_event = True
 
+    def get_latest_images(self):
+        latest_imgs = {}
+        for camera_id, camera in self.cameras.items():
+            img = camera.get_latest_image()
+            if img is not None:
+                latest_imgs[camera_id] = img
+        return latest_imgs
 
-    def get_latest_frame(self):
+    def get_latest_frames(self):
         """
         Get the latest available image frame for each camera.
         Returns:
@@ -374,9 +411,10 @@ class CameraManager:
         """
         latest_frames = {}
         for camera_id, camera in self.cameras.items():
-            if camera.all_frames:
-                # Get the last frame in the list
-                latest_frames[camera_id] = camera.all_frames[-1]
+            if camera.camera_status:
+                resulting_frame = camera.capture_frame()
+                if resulting_frame != None:
+                    latest_frames[camera_id] = resulting_frame
             else:
                 Logger.log("ERROR", f"No frames found for camera {camera_id}.")
                 camera.log_error(CameraErrorCodes.NO_IMAGES_FOUND)
@@ -415,6 +453,6 @@ class CameraManager:
 
 
 if __name__ == "__main__":
-    
-    cm = CameraManager([0,2])
+
+    cm = CameraManager([0])
     cm.run_live()
