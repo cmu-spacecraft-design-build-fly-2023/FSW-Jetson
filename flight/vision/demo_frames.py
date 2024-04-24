@@ -17,12 +17,10 @@ class DemoFrames:
     def get_latest_frame(self):
         image_path = self.get_next_image_path()
         image = cv2.imread(image_path)
-        print(f"================================================{image_path}") # debug
         if image is not None:
             timestamp = datetime.datetime.now()
             return Frame(frame=image, camera_id=0, timestamp=timestamp)
         else:
-            print(f"Failed to read image from {image_path}")
             return None
 
 # Create an instance of DemoFrames with the specified directory

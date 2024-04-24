@@ -10,7 +10,7 @@ Date: [Creation or Last Update Date]
 import queue
 import threading
 import time
-
+from flight import Logger
 
 
 # TODO use logger on DEBUG instead of print statements
@@ -29,15 +29,15 @@ class Task:
         self.attempts += 1
         try:
             result = self.function(self.payload) # for now ignore the data argument :: , self.data
-            print(f"Task {self.task_id} completed successfully on attempt {self.attempts}.")
+            Logger.log("INFO", f"Task {self.task_id} completed successfully on attempt {self.attempts}.")
             return result
         except Exception as e:
-            print(f"Task {self.task_id} failed on attempt {self.attempts} with error: {e}")
+            Logger.log("ERROR", f"Task {self.task_id} failed on attempt {self.attempts} with error: {e}")
             if self.attempts < 3:
-                print(f"Retrying task {self.task_id}...")
+                Logger.log("INFO", f"Retrying task {self.task_id}...")
                 return self.execute()  # Simple retry logic
             else:
-                print(f"Task {self.task_id} exceeded retry limit and will not be attempted again.")
+                Logger.log("INFO", f"Task {self.task_id} exceeded retry limit and will not be attempted again.")
                 # TODO Error message must be logged here and sent to a monitoring system / Argus
                 return None
 
@@ -58,7 +58,7 @@ class CommandQueue:
             if not self.paused:
                 self.queue.put((task.priority, time.time(), task))
             else:
-                print("Queue is paused. Task not added.")
+                Logger.log("INFO", "Queue is paused. Task not added.")
 
     def get_next_task(self):
         """Remove and return a task from the queue based on priority."""
@@ -98,9 +98,7 @@ class CommandQueue:
             tasks.sort()  # Sort primarily by priority, secondarily by timestamp
             for priority, timestamp, task in tasks:
                 payload_present = "Yes" if task.payload else "No"
-                print(
-                    f"Task ID: {task.task_id}, Priority: {priority},  Timestamp: {timestamp}, Payload Present: {payload_present}"
-                )
+                Logger.log("INFO", f"Task ID: {task.task_id}, Priority: {priority},  Timestamp: {timestamp}, Payload Present: {payload_present}")
 
 
 class TX_Queue:

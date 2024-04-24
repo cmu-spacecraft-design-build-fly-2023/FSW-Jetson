@@ -95,8 +95,10 @@ class Camera:
 
             self.camera_status = self.initialize_camera()
             
-            print(self.camera_status)
-
+            Logger.log(
+                "INFO",
+                f"Camera {camera_id}: {self.camera_status}",
+            )
 
             self._current_frame = None
             self.all_frames = []
@@ -236,7 +238,7 @@ class Camera:
         # If more than `limit` files, remove the oldest ones
         while len(files) > limit:
             os.remove(files[0])
-            print(f"Deleted old image {files[0]} to maintain limit")
+            Logger.log("INFO", f"Camera {self.camera_id}: Removed old image {files[0]} to maintain limit")
             files.pop(0)
 
     # DEBUG only
@@ -250,7 +252,7 @@ class Camera:
                 self.save_image(curr_frame)
                 cv2.imshow(f"Live Feed from Camera {self.camera_id}", frame)
         else:
-            print(f"Camera {self.camera_id} is not operational.")
+            Logger.log("ERROR", f"Camera {self.camera_id} is not operational.")
             self.log_error(CameraErrorCodes.CAMERA_NOT_OPERATIONAL)
         
 
@@ -266,8 +268,8 @@ class CameraManager:
             cam_obj = Camera(camera_id, config_path=config_path)
             if cam_obj is not None:
                 self.cameras[camera_id] = cam_obj
-                print(f"Camera {camera_id} added to the camera manager.")
-                print(f"Camera {camera_id} operational status: {cam_obj.camera_status}")
+                Logger.log("INFO", f"Camera {camera_id} added to the camera manager.")
+                Logger.log("INFO", f"Camera {camera_id} operational status: {cam_obj.camera_status}")
 
         number_of_cameras = len(self.cameras)
         self.camera_frames = []
@@ -309,7 +311,7 @@ class CameraManager:
             camera = self.cameras.get(camera_id)
             if camera is not None and hasattr(camera, "cap") and camera.cap.isOpened():
                 camera.cap.release()
-                print(f"Camera {camera_id} turned off.")
+                Logger.log("INFO", f"Camera {camera_id} turned off.")
 
     def get_camera(self, camera_id: int) -> Camera:
         """
@@ -376,7 +378,7 @@ class CameraManager:
                 # Get the last frame in the list
                 latest_frames[camera_id] = camera.all_frames[-1]
             else:
-                print(f"No frames found for camera {camera_id}.")
+                Logger.log("ERROR", f"No frames found for camera {camera_id}.")
                 camera.log_error(CameraErrorCodes.NO_IMAGES_FOUND)
                 latest_frames[camera_id] = None
         return latest_frames
@@ -393,7 +395,6 @@ class CameraManager:
                 # camera_frames.append(camera.current_frame)
                 camera_frames[camera_id] = camera.all_frames
             except:
-                print(f"No frames found for camera {camera_id}, or no images are present.")
                 camera.log_error(CameraErrorCodes.NO_IMAGES_FOUND)
                 camera_frames[camera_id] = []
         return camera_frames
