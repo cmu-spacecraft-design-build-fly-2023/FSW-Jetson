@@ -189,7 +189,7 @@ class Camera:
     def current_frame(self, value):
         self._current_frame = value
 
-    def read_image_from_path(self):
+    def get_latest_image(self):
         image_files = os.listdir(self.image_folder)
         if not image_files:
             Logger.log("ERROR", f"Camera {self.camera_id}: No images found.")
@@ -268,6 +268,12 @@ class CameraManager:
         self.stop_event = False 
         Logger.log("INFO", f"Camera Manager initialized.")
 
+    def get_status(self):
+        status = []
+        for camera_id, camera in self.cameras.items():
+            status.append(camera.camera_status)
+        return status
+
     def capture_frames(self):
         """
         capture stores images for all cameras given in the list
@@ -299,9 +305,8 @@ class CameraManager:
         """
         Release cameras of given IDs
         """
-        for camera_id in camera_ids:
-            camera = self.cameras.get(camera_id)
-            if camera is not None and hasattr(camera, "cap") and camera.cap.isOpened():
+        for camera_id, camera in self.cameras.items():
+            if hasattr(camera, "cap") and camera.cap.isOpened():
                 camera.cap.release()
                 print(f"Camera {camera_id} turned off.")
 
@@ -357,6 +362,11 @@ class CameraManager:
     def stop_live(self):
         self.stop_event = True
 
+    def get_latest_images(self):
+        latest_imgs = {}
+        for camer_id,camera in self.cameras.items():
+            latest_imgs[camer_id] = camera.get_latest_image()
+        return latest_imgs
 
     def get_latest_frame(self):
         """
@@ -366,12 +376,13 @@ class CameraManager:
         """
         latest_frames = {}
         for camera_id, camera in self.cameras.items():
-            if camera.all_frames:
-                # Get the last frame in the list
-                latest_frames[camera_id] = camera.all_frames[-1]
+            if camera.camera_status:
+                resulting_frame = camera.capture_frame()
+                if resulting_frame != None:
+                    latest_frames[camera_id] = resulting_frame
             else:
                 print(f"No frames found for camera {camera_id}.")
-                camera.log_error(CameraErrorCodes.NO_IMAGES_FOUND)
+                camera.log_error(CameraErrorCodes.CAMERA_NOT_OPERATIONAL)
                 latest_frames[camera_id] = None
         return latest_frames
 

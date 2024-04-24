@@ -60,6 +60,10 @@ def request_time(payload):
 
 def request_payload_state(payload):
     """Request the current state of the payload."""
+    cm = payload.camera_manager
+    status = cm.get_status()
+    print(status)
+    return status 
     
 
 
@@ -88,12 +92,19 @@ def delete_all_logs(payload):
 
 def capture_and_send_image(payload):
     """Capture and send an image."""
-    pass
+    cm = payload.camera_manager
+    print("latest frame captures and returned ")
+    return cm.get_latest_frame()
+
+
+    
 
 
 def request_last_image(payload):
     """Request the last image."""
-    pass
+    cm = payload.camera_manager
+    return cm.get_latest_images()
+    
 
 
 def request_image_metadata(payload):
@@ -103,12 +114,16 @@ def request_image_metadata(payload):
 
 def turn_on_cameras(payload):
     """Turn on the cameras."""
-    pass
+    cm = payload.camera_manager
+    cm.turn_on_cameras()
+    
 
 
 def turn_off_cameras(payload):
     """Turn off the cameras."""
-    pass
+    cm = payload.camera_manager
+    cm.turn_off_cameras()
+    
 
 
 def request_image_storage_info(payload):

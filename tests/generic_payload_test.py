@@ -1,4 +1,6 @@
-
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from flight.logger import Logger
 from flight.message_id import *
@@ -44,10 +46,14 @@ if __name__ == "__main__":
 
     # ADD COMMANDS PRIOR TO THE QUEUE HERE IF YOU WANT
     # e.g. add_command(payload, DEBUG_HELLO)
-    add_command(payload, DEBUG_HELLO)
+    add_command(payload, DEBUG_HELLO)   
+    add_command(payload, REQUEST_PAYLOAD_STATE)
+    add_command(payload,CAPTURE_AND_SEND_IMAGE)
+    add_command(payload,REQUEST_LAST_IMAGE)
     
-    add_command(payload, RUN_ML_PIPELINE)
-    add_command(payload, REQUEST_LANDMARKED_IMAGE)
+    # add_command(payload, RUN_ML_PIPELINE)
+    # add_command(payload, REQUEST_LANDMARKED_IMAGE)
+
 
     start_time = time.time()
 

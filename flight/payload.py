@@ -44,7 +44,7 @@ class Payload:
         self._state = PAYLOAD_STATE.STARTUP
         self._command_queue = CommandQueue()
         self._tx_queue = TX_Queue()
-        self._communication = UARTComm("/dev/ttyACM0")
+        # self._communication = UARTComm("/dev/ttyACM0")
         self._camera_manager = CameraManager([0,2,4,6,8,10])
         self._threads = []
 
@@ -86,7 +86,7 @@ class Payload:
 
         
         self.launch_camera()
-        self.launch_UART_communication()
+        # self.launch_UART_communication()
 
         try:
             while True:
