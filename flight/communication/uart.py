@@ -14,8 +14,8 @@ import threading
 
 from command import Task
 
-import flight.message as mg
-from flight.message import Message
+import flight.communication.message as mg
+from flight.communication.message import Message
 from flight.logger import Logger
 
 MAX_RETRIES = 3

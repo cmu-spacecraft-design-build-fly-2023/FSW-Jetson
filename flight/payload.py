@@ -22,7 +22,7 @@ import flight.message_id as msg
 from flight.task_map import ID_TASK_MAPPING
 from flight.vision.camera import CameraManager
 
-from flight.communication import UARTComm
+from flight.communication.uart import UARTComm
 
 from flight.logger import Logger
 
@@ -47,8 +47,6 @@ class Payload:
         # self._communication = UARTComm("/dev/ttyACM0")
         self._camera_manager = CameraManager([0,2,4,6,8,10])
         self._threads = []
-
-        self.current_task_thread = None  # This will hold the current task's thread
         self._idle_count = 0  # Counter before switching to IDLE state
         
 

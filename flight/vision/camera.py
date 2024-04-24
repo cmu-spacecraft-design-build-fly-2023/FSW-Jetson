@@ -62,6 +62,10 @@ class Frame:
     def save(self):
         pass
 
+    @classmethod
+    def resize(cls, img, width=640, height=480):
+        return cv2.resize(img, (width, height), interpolation=cv2.INTER_AREA)
+
 
 class Camera:
     def __init__(self, camera_id, config_path):
@@ -364,8 +368,10 @@ class CameraManager:
 
     def get_latest_images(self):
         latest_imgs = {}
-        for camer_id,camera in self.cameras.items():
-            latest_imgs[camer_id] = camera.get_latest_image()
+        for camera_id,camera in self.cameras.items():
+            img = camera.get_latest_image()
+            if img is not None:
+                latest_imgs[camera_id] = img
         return latest_imgs
 
     def get_latest_frames(self):

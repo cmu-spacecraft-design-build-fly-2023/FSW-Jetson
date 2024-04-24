@@ -6,18 +6,29 @@ Description: It contains the high-level tasks/activities processed by the payloa
 Author: Ibrahima S. Sow
 Date: [Creation or Last Update Date]
 """
-
-from flight.logger import Logger
-from flight.vision.demo_frames import demo_frames # Function to provide frames insequence
-from flight.vision import MLPipeline
-from flight.vision.camera import Frame
 import os
 import cv2
 import datetime
 
 
+from flight.logger import Logger
+
+
+import flight.communication.encoding as enc
+
+
+from flight.vision.demo_frames import demo_frames # Function to provide frames insequence
+from flight.vision import MLPipeline
+from flight.vision.camera import Frame
+
+
 # TODO - fill in functions
 # TODO - Fill in the functions with the correct parameters and return types
+
+## Constants
+IMG_WIDTH = 640
+IMG_HEIGHT = 480
+
 
 
 # DEBUG
@@ -94,12 +105,23 @@ def capture_and_send_image(payload):
 
 
     
-
-
 def request_last_image(payload):
     """Request the last image."""
     cm = payload.camera_manager
-    return cm.get_latest_images()
+    # TODO THE IMAGE SELECTION IS HARDCODED ONLY FOR THE DEMO - REMOVE THIS
+    img = cm.get_latest_images()[0]
+
+    if img is None:
+        Logger.log("ERROR", "No image available.")
+        return None
+    
+    height, width, _ = img.shape
+
+    # Check if image dimensions are correct
+    if height != IMG_HEIGHT or width != IMG_WIDTH:
+        img = cv2.resize(img, (IMG_WIDTH, IMG_HEIGHT))
+
+    return enc.encode_image_transmission_message(img)
     
 
 
