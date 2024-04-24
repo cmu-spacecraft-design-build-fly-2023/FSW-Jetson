@@ -168,7 +168,7 @@ class MLPipeline:
         # Draw each landmark with a larger circle based on its region
         region_color_map = {}
         # Increased circle radius (3 times the original radius of 5)
-        circle_radius = 15
+        circle_radius = 10
         circle_thickness = -1  # Filled circle
         for idx, (region, detection_result) in enumerate(regions_and_landmarks):
             color = colors[idx % len(colors)]
@@ -181,7 +181,7 @@ class MLPipeline:
         legend_x = 10
         legend_y = 50  # Start a bit lower to accommodate larger text
         # Increased font scale (3 times the original scale of 0.5)
-        font_scale = 1
+        font_scale = 1.5
         text_thickness = 3  # Thicker text for better visibility
         for region, color in region_color_map.items():
             cv2.putText(
@@ -196,13 +196,14 @@ class MLPipeline:
             legend_y += 40  # Increase spacing to prevent overlapping text entries
 
         # Generate a filename based on the frame ID and save the image
-        filename = f"frame_{frame_obj.frame_id}.jpg"
-        save_path = os.path.join(save_dir, filename)
-        cv2.imwrite(save_path, image)
+        landmark_save_path = os.path.join(save_dir, "frame_w_landmarks.jpg")
+        cv2.imwrite(landmark_save_path, image)
+
+        img_save_path = os.path.join(save_dir, "frame.jpg")
+        cv2.imwrite(img_save_path, frame_obj.frame)
 
         # Save the metadata to a text file
-        metadata_filename = f"frame_{frame_obj.frame_id}_metadata.txt"
-        metadata_path = os.path.join(save_dir, metadata_filename)
+        metadata_path = os.path.join(save_dir, "frame_metadata.txt")
         with open(metadata_path, 'w') as f:
             f.write(f"Camera ID: {frame_obj.camera_id}\n")
             f.write(f"Timestamp: {frame_obj.timestamp}\n")
