@@ -2,7 +2,7 @@ from jtop import jtop
 import copy
 
 #additional per cpu metrics user, nice, system utilization 
-def cpu_metrics(metrics_requested = {'online', 'idle'}):
+"""def cpu_metrics(metrics_requested = {'online', 'idle'}):
     jetson = jtop()
     jetson.start()
     compute_metrics = jetson.cpu
@@ -64,4 +64,4 @@ def misc_metrics(ram_metrics_requested = {'tot', 'free'} ,
 if __name__ == '__main__':
     print(cpu_metrics())
     print(gpu_metrics())
-    print(misc_metrics())
+    print(misc_metrics())"""
