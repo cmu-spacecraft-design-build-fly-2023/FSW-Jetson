@@ -8,7 +8,7 @@ Date: [Creation or Last Update Date]
 """
 
 from flight.logger import Logger
-from flight.demo_frames import demo_frames # Function to provide frames insequence
+from flight.vision.demo_frames import demo_frames # Function to provide frames insequence
 from flight.vision import MLPipeline
 from flight.vision.camera import Frame
 import os
