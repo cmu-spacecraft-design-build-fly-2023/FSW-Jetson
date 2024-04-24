@@ -79,7 +79,7 @@ class Payload:
 
         # Logger.configure(log_level)
         # print("Logger configured to level: ", log_level)
-        print("Starting Payload Task Manager...")
+        Logger.log("INFO", "Starting Payload Task Manager...")
 
         self.initialize()
 
@@ -107,7 +107,7 @@ class Payload:
 
                 # TODO
         except KeyboardInterrupt:
-            print("Shutting down Payload Task Manager...")
+            Logger.log("INFO", "Shutting down Payload Task Manager...")
             self.cleanup()
 
     def process_next_task(self):
@@ -122,10 +122,10 @@ class Payload:
         else:
             self._idle_count += 1
             if self._idle_count < 1:
-                print("No task to process.")
+                Logger.log("INFO", "No task to process.")
             if self._idle_count >= 5:
                 self._state = PAYLOAD_STATE.IDLE
-                print("Payload is in IDLE state. Checking for tasks every 10 seconds.")
+                Logger.log("INFO", "Payload is in IDLE state. Checking for tasks every 10 seconds.")
                 self._idle_count = 0
 
     def DEBUG_tasks(self):

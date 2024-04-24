@@ -32,16 +32,21 @@ Logger.initialize_log(
 )"""
 
 
-def get_latest_frame(image_dir):
+def get_latest_frame(image_dir, start_index=6, end_index=11):
     frame_objects = {}
-    # List all files in the directory and filter out non-jpg files
+    # List all files in the directory and filter out non-png files
     all_files = [f for f in os.listdir(image_dir) if f.endswith(".png")]
-    # Optionally sort files if they are not in the desired order
+    # Sort files if they are not in the desired order
     all_files.sort()
-    # Process only the top five images
-    top_files = all_files[:1]
+    
+    # Adjust the end index if it is not set or exceeds the number of available files
+    if end_index is None or end_index > len(all_files):
+        end_index = len(all_files)
 
-    for i, filename in enumerate(top_files):
+    # Process images from start_index to end_index, adjusting for list indexing
+    selected_files = all_files[start_index:end_index]
+
+    for i, filename in enumerate(selected_files, start=start_index):
         image_path = os.path.join(image_dir, filename)
         image = cv2.imread(image_path)
         if image is not None:
@@ -74,18 +79,17 @@ def draw_landmarks_and_save(frame_obj, regions_and_landmarks, save_dir):
 
     # Define a list of colors for different regions (in BGR format)
     colors = [
-        (255, 0, 0),
-        (0, 255, 0),
-        (0, 0, 255),
-        (255, 255, 0),
-        (0, 255, 255),
-        (255, 0, 255),
+        (0, 0, 255),      # Red
+        (180, 105, 255),  # Pink
+        (0, 165, 255),    # Orange
+        (255, 0, 0),      # Blue
+        (0, 255, 0),      # Green
     ]
 
     # Draw each landmark with a larger circle based on its region
     region_color_map = {}
     # Increased circle radius (3 times the original radius of 5)
-    circle_radius = 15
+    circle_radius = 10
     circle_thickness = -1  # Filled circle
     for idx, (region, detection_result) in enumerate(regions_and_landmarks):
         color = colors[idx % len(colors)]
@@ -98,7 +102,7 @@ def draw_landmarks_and_save(frame_obj, regions_and_landmarks, save_dir):
     legend_x = 10
     legend_y = 50  # Start a bit lower to accommodate larger text
     # Increased font scale (3 times the original scale of 0.5)
-    font_scale = 1
+    font_scale = 2
     text_thickness = 3  # Thicker text for better visibility
     for region, color in region_color_map.items():
         cv2.putText(
@@ -120,7 +124,8 @@ def draw_landmarks_and_save(frame_obj, regions_and_landmarks, save_dir):
 
 
 if __name__ == "__main__":
-    image_dir = "/home/riverflame/Spacecraft/FSW-Jetson/tests/vision/data/12R"
+    relative_path = "data/inference_input"
+    image_dir = os.path.join(os.getcwd(), relative_path.strip("/"))
     processor = FrameProcessor()
     pipeline = MLPipeline()
 
@@ -137,4 +142,4 @@ if __name__ == "__main__":
         regions_and_landmarks = pipeline.run_ml_pipeline_on_single(frame_obj)
         if regions_and_landmarks:
             # Assuming you have a Frame object and some regions and landmarks processed
-            draw_landmarks_and_save(frame_obj, regions_and_landmarks, "inference_output")
+            pipeline.visualize_landmarks(frame_obj, regions_and_landmarks, "inference_output")

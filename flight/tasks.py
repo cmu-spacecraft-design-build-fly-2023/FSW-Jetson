@@ -205,7 +205,7 @@ def run_ml_pipeline(payload):
 def request_landmarked_image(payload):
     """Request a landmarked image and return a Frame object containing the image and its metadata."""
     image_dir = "data/inference_output"
-    image_path = os.path.join(image_dir, "frame_w_landmarks.jpg")
+    image_path = os.path.join(image_dir, "frame_w_landmarks.png")
     metadata_path = os.path.join(image_dir, "frame_metadata.txt")
 
     # Load the image
@@ -232,7 +232,7 @@ def request_landmarked_image(payload):
 
     # Create a Frame object
     frame = Frame(frame=image, camera_id=camera_id, timestamp=timestamp)
-    Logger.log("INFO", f"got the frame {frame}")
+    Logger.log("DEBUG", f"got the frame {frame}")
     return frame
 
 
