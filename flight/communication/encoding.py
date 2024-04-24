@@ -27,6 +27,7 @@ def encode_image_transmission_message(img):
     img_bytes = img.tobytes()
     return Message(TRANSMIT_IMAGE, img_bytes)
 
+
 def encode_diagnostic_data(data):
     """
     Encodes a diagnostic data message.
@@ -46,13 +47,11 @@ def encode_diagnostic_data(data):
 if __name__ == "__main__":
 
     import cv2
-    img = cv2.imread('tests/vision/data/12R/l9_12R_00000.png')
+
+    img = cv2.imread("tests/vision/data/12R/l9_12R_00000.png")
     img = cv2.resize(img, (640, 480))
 
     encoded_msg = encode_image_transmission_message(img)
 
     data = (0x01, 0x02, 0x03, 0x04)
     diagnostic_msg = encode_diagnostic_data(data)
-
-
-    

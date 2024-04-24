@@ -35,7 +35,6 @@ class UARTComm:
         self.port = port
         self.baudrate = baudrate
 
-
     def send_message(self, message) -> bool:
         """
         Sends a message over UART.
@@ -64,13 +63,13 @@ class UARTComm:
 
             time_s = 0
             while self.uart.in_waiting < mg.PKT_METADATA_SIZE:
-                if (time_s >= TIMEOUT):
+                if time_s >= TIMEOUT:
                     return False
-                time.sleep(.01)
+                time.sleep(0.01)
                 time_s += 1
                 continue
 
-            #response = self.uart.read(message.PKT_METADATA_SIZE)
+            # response = self.uart.read(message.PKT_METADATA_SIZE)
             response = bytearray([0x01, 0x02, 0x03, 0x04])
             Logger.log("Info", f"Received response {response}")
             (seq_num, packet_type, _) = Message.parse_packet_meta(response)
@@ -105,7 +104,7 @@ class UARTComm:
             time += 0.01
             time.sleep(0.01)
             continue
-    
+
         header = self.uart.read(mg.PACKET_SIZE)
         (seq_num, packet_type, payload_size) = Message.parse_packet_meta(header)
         if packet_type != mg.PKT_TYPE_HEADER:
@@ -114,10 +113,8 @@ class UARTComm:
             raise RuntimeError("Invalid header")
 
         # do something with message type
-        (message_type, num_packets) = Message.parse_header_payload(
-            header[mg.PKT_METADATA_SIZE :]
-        )
-        # TODO do something if not correct message type 
+        (message_type, num_packets) = Message.parse_header_payload(header[mg.PKT_METADATA_SIZE :])
+        # TODO do something if not correct message type
         self.uart.write(Message.create_ack(seq_num))
 
         expected_seq_num = seq_num + 1
@@ -142,7 +139,7 @@ class UARTComm:
             # TODO handle case with no success
 
         return message_type, message
-    
+
     def available(self):
         """
         Checks if there are any messages available to be read.
@@ -152,7 +149,6 @@ class UARTComm:
         """
         return self.uart.in_waiting > 0
 
-
     def stop(self):
         """
         Stops the UART communication module.
@@ -160,11 +156,11 @@ class UARTComm:
         self.uart.close()
 
 
-
 if __name__ == "__main__":
 
     from message_id import *
-    import struct 
+    import struct
+
     ff = "<bbbb"
 
     uart = UARTComm("/dev/ttyACM0")
@@ -172,4 +168,3 @@ if __name__ == "__main__":
     dd = [0x01, 0x02, 0x03, 0x04]
     msg = Message(TRANSMIT_DIAGNOSTIC_DATA, struct.pack(ff, *dd))
     uart.send_message(msg)
-

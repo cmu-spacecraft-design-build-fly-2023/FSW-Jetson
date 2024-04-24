@@ -43,6 +43,7 @@ import inspect
 # Default configuration upon module load (can be reconfigured elsewhere in the code)
 # Logger.configure(log_level=logging.DEBUG, log_file='log/payload.log')
 
+
 def map_log_level(log_level):
     """Maps the input log level to the corresponding logging module level."""
     if log_level.upper() == "INFO":
@@ -54,14 +55,14 @@ def map_log_level(log_level):
     elif log_level.upper() == "ERROR":
         return logging.ERROR
 
-    
+
 class Logger:
     logger = None
     log_file_path = "log/payload.log"
     levels = ["INFO", "DEBUG", "WARNING", "ERROR"]
 
     @classmethod
-    def configure(cls, log_level='INFO', log_file="log/payload.log"):
+    def configure(cls, log_level="INFO", log_file="log/payload.log"):
         """Configures the class logger with specific handlers and levels."""
         cls.log_file_path = os.path.join(os.getcwd(), log_file)
         # Create directory for log file if it does not exist

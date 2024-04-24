@@ -6,6 +6,7 @@ Description: It contains the high-level tasks/activities processed by the payloa
 Author: Ibrahima S. Sow
 Date: [Creation or Last Update Date]
 """
+
 import os
 import cv2
 import datetime
@@ -17,7 +18,7 @@ from flight.logger import Logger
 import flight.communication.encoding as enc
 
 
-from flight.vision.demo_frames import demo_frames # Function to provide frames insequence
+from flight.vision.demo_frames import demo_frames  # Function to provide frames insequence
 from flight.vision import MLPipeline
 from flight.vision.camera import Frame
 
@@ -28,7 +29,6 @@ from flight.vision.camera import Frame
 ## Constants
 IMG_WIDTH = 640
 IMG_HEIGHT = 480
-
 
 
 # DEBUG
@@ -73,15 +73,17 @@ def request_payload_state(payload):
     return payload.state
 
 
-
 def request_payload_monitoring_data(payload):
     """Request the monitoring data of the payload."""
     data = payload.monitor()
-    mtg_val = [data["RAM Usage (%)"], data["Disk Storage Usage (%)"], data["CPU Temperature (°C)"], data["GPU Temperature (°C)"]]
-    msg =  enc.encode_diagnostic_data(mtg_val)
+    mtg_val = [
+        data["RAM Usage (%)"],
+        data["Disk Storage Usage (%)"],
+        data["CPU Temperature (°C)"],
+        data["GPU Temperature (°C)"],
+    ]
+    msg = enc.encode_diagnostic_data(mtg_val)
     payload.tx_queue.add_msg(msg)
-
-
 
 
 def restart_payload(payload):
@@ -109,7 +111,6 @@ def capture_and_send_image(payload):
     return cm.get_latest_frames()
 
 
-    
 def request_last_image(payload):
     """Request the last image."""
     cm = payload.camera_manager
@@ -119,7 +120,7 @@ def request_last_image(payload):
     if img is None:
         Logger.log("ERROR", "No image available.")
         return None
-    
+
     height, width, _ = img.shape
 
     # Check if image dimensions are correct
@@ -127,7 +128,6 @@ def request_last_image(payload):
         img = cv2.resize(img, (IMG_WIDTH, IMG_HEIGHT))
 
     payload.tx_queue.add_msg(enc.encode_image_transmission_message(img))
-    
 
 
 def request_image_metadata(payload):
@@ -140,14 +140,12 @@ def turn_on_cameras(payload):
     cm = payload.camera_manager
     cm.turn_on_cameras()
     cm.set_flag()
-    
 
 
 def turn_off_cameras(payload):
     """Turn off the cameras."""
     cm = payload.camera_manager
     cm.turn_off_cameras()
-    
 
 
 def request_image_storage_info(payload):
@@ -180,11 +178,11 @@ def request_camera_status(payload):
     cm = payload.camera_manager
     status = cm.get_status()
     Logger.log("INFO", f"Camera status: {status}")
-    return status 
-    
+    return status
 
 
 # Inference
+
 
 def run_ml_pipeline(payload):
     """
@@ -195,11 +193,14 @@ def run_ml_pipeline(payload):
     if latest_frame is not None:
         regions_and_landmarks = pipeline.run_ml_pipeline_on_single(latest_frame)
         if regions_and_landmarks is not None:
-            pipeline.visualize_landmarks(latest_frame, regions_and_landmarks, "data/inference_output")
+            pipeline.visualize_landmarks(
+                latest_frame, regions_and_landmarks, "data/inference_output"
+            )
             cm = payload.camera_manager()
             cm.set_flag()
-    #else:
+    # else:
     #    print("No frame available to process.")
+
 
 def request_landmarked_image(payload):
     """Request a landmarked image and return a Frame object containing the image and its metadata."""
@@ -217,11 +218,11 @@ def request_landmarked_image(payload):
     if not os.path.exists(metadata_path):
         Logger.log("ERROR", "The metadata file was not found.")
         return None
-    
+
     metadata = {}
-    with open(metadata_path, 'r') as f:
+    with open(metadata_path, "r") as f:
         for line in f:
-            key, value = line.strip().split(': ')
+            key, value = line.strip().split(": ")
             metadata[key] = value
 
     # Extract metadata information
