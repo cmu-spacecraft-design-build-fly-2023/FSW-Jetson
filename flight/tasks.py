@@ -10,6 +10,12 @@ Date: [Creation or Last Update Date]
 from flight.logger import Logger
 from flight.demo_frames import get_latest_frame # Function to provide frames insequence
 from flight.vision import MLPipeline
+from flight.vision.camera import Frame
+import os
+import cv2
+import datetime
+from pathlib import Path
+
 
 # TODO - fill in functions
 # TODO - Fill in the functions with the correct parameters and return types
@@ -189,6 +195,7 @@ def request_landmarked_image(payload):
     if image is not None:
         # Create and return the Frame object
         camera_id, timestamp, frame_id = parse_metadata(latest_metadata_file)
+        print(f"==================================got the image{frame_id}")
         return Frame(frame=image, camera_id=camera_id, timestamp=timestamp)
     else:
         print(f"Failed to load image from {image_path}")

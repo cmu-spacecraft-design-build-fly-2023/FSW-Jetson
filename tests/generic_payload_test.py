@@ -60,6 +60,8 @@ if __name__ == "__main__":
             # If you want to send commands later, use the add_command(command_id) function within an if statement with time 
             # e.g. add_command(payload, DEBUG_HELLO)
             add_command(payload, RUN_ML_PIPELINE)
+            add_command(payload, REQUEST_LANDMARKED_IMAGE)
+
 
 
 
