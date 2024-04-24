@@ -75,18 +75,17 @@ def draw_landmarks_and_save(frame_obj, regions_and_landmarks, save_dir):
 
     # Define a list of colors for different regions (in BGR format)
     colors = [
-        (255, 0, 0),
-        (0, 255, 0),
-        (0, 0, 255),
-        (255, 255, 0),
-        (0, 255, 255),
-        (255, 0, 255),
+        (0, 0, 255),      # Red
+        (180, 105, 255),  # Pink
+        (0, 165, 255),    # Orange
+        (255, 0, 0),      # Blue
+        (0, 255, 0),      # Green
     ]
 
     # Draw each landmark with a larger circle based on its region
     region_color_map = {}
     # Increased circle radius (3 times the original radius of 5)
-    circle_radius = 15
+    circle_radius = 10
     circle_thickness = -1  # Filled circle
     for idx, (region, detection_result) in enumerate(regions_and_landmarks):
         color = colors[idx % len(colors)]
@@ -99,7 +98,7 @@ def draw_landmarks_and_save(frame_obj, regions_and_landmarks, save_dir):
     legend_x = 10
     legend_y = 50  # Start a bit lower to accommodate larger text
     # Increased font scale (3 times the original scale of 0.5)
-    font_scale = 1
+    font_scale = 2
     text_thickness = 3  # Thicker text for better visibility
     for region, color in region_color_map.items():
         cv2.putText(
