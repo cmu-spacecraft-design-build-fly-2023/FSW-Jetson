@@ -77,59 +77,63 @@ class Camera:
         os.makedirs(self.image_folder, exist_ok=True)
         self.max_startup_time = config["max_startup_time"]
         self.camera_settings = config["cameras"].get(camera_id, {})
-        self.resolution = (
-            self.camera_settings["resolution"]["width"],
-            self.camera_settings["resolution"]["height"],
-        )
-        self.zoom = self.camera_settings.get("zoom")
-        self.focus = self.camera_settings.get("focus")
-        self.exposure = self.camera_settings.get("exposure")
-        self.camera_status = self.initialize_camera()
-        self._current_frame = None
-        self.all_frames = []
+        if self.camera_settings != {}:
+        
+            self.resolution = (
+                self.camera_settings["resolution"]["width"],
+                self.camera_settings["resolution"]["height"],
+            )
+            self.zoom = self.camera_settings.get("zoom")
+            self.focus = self.camera_settings.get("focus")
+            self.exposure = self.camera_settings.get("exposure")
 
-        Logger.log(
-            "INFO",
-            f"Camera {camera_id}: Initialized with settings {self.camera_settings}",
-        )
+            self.camera_status = self.initialize_camera()
+            
+            print(self.camera_status)
 
-    def load_config(self, config_path):
-        with open(config_path, "r") as file:
-            return yaml.safe_load(file)
 
-    def log_error(self, error_code):
-        message = error_messages.get(error_code, "Unknown error.")
-        Logger.log("ERROR", f"Camera {self.camera_id}: {message}")
+            self._current_frame = None
+            self.all_frames = []
+
+            Logger.log(
+                "INFO",
+                f"Camera {camera_id}: Initialized with settings {self.camera_settings}",
+            )
+        else:
+            self.camera_status = 0
+            Logger.log("ERROR", f"Camera {camera_id}: Configuration not found.")
 
     def initialize_camera(self):
         start_time = time.time()
-        cap = cv2.VideoCapture(self.camera_id)
-        if cap.isOpened():
+        self.cap = cv2.VideoCapture(self.camera_id)
+        status = 0
+        if self.cap.isOpened():
             elapsed_time = (
                 time.time() - start_time
             ) * 1000  # Calculate elapsed time in milliseconds
 
             if elapsed_time <= self.max_startup_time:
-                cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.resolution[0])
-                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.resolution[1])
+                self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.resolution[0])
+                self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.resolution[1])
                 Logger.log(
                     "INFO",
                     f"Camera {self.camera_id}: Successfully initialized within {self.max_startup_time} ms",
                 )
-                return 1
+                status =  1
+                return status
             else:
                 Logger.log(
                     "ERROR",
                     f"Camera {self.camera_id} initialization exceeded {self.max_startup_time} milliseconds.",
                 )
                 self.log_error(CameraErrorCodes.CAMERA_INITIALIZATION_FAILED)
-                return 0
+                return status
         else:
-            return 0
+            return status
 
     def check_operational_status(self):
         if not hasattr(self, "cap") or not self.cap.isOpened():
-            self.cap = cv2.VideoCapture(self.camera_id)
+            self.cap = cv2.VideoCapture(self.camera_id) ## This line shouldn't be there as it takes too much time to create a new video capture object
             if self.cap.isOpened():
                 self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.resolution[0])
                 self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.resolution[1])
@@ -140,35 +144,42 @@ class Camera:
                 return self.camera_status
         return self.camera_status
 
+    def load_config(self, config_path):
+        with open(config_path, "r") as file:
+            return yaml.safe_load(file)
+
+    def log_error(self, error_code):
+        message = error_messages.get(error_code, "Unknown error.")
+        Logger.log("ERROR", f"Camera {self.camera_id}: {message}")
+
     def capture_frame(self):
-        if self.check_operational_status():
-            # cap = cv2.VideoCapture(self.camera_id)
+        if self.camera_status:
             try:
                 ret, frame = self.cap.read()
                 if ret:
-                    if not self.is_blinded_by_sun(frame):
-                        timestamp = datetime.now()
-                        Logger.log(
-                            "INFO",
-                            f"Camera {self.camera_id}: Frame captured at {timestamp}",
-                        )
-                        self.current_frame = Frame(frame, self.camera_id, timestamp)
-                        self.save_image(self.current_frame)
-                        self.all_frames.append(self.current_frame)
-                    else:
-                        Logger.log("ERROR", f"Camera {self.camera_id}: Blinded by the lights")
-                        self.log_error(CameraErrorCodes.SUN_BLIND)
+                    timestamp = datetime.now()
+                    #Logger.log("INFO", f"Camera {self.camera_id}: Frame captured at {timestamp}")
+                    
+                    self.current_frame = Frame(frame, self.camera_id, timestamp)
+                    #self.save_image(self.current_frame)
+                    #self.all_frames.append(self.current_frame)
+                    return self.current_frame
+
                 else:
                     Logger.log("ERROR", f"Camera {self.camera_id}: Failed to capture image")
                     self.log_error(CameraErrorCodes.READ_FRAME_ERROR)
                     self.log_error(CameraErrorCodes.CAPTURE_FAILED)
                     self.camera_status = 0
-            finally:
-                self.cap.release()
+                    return None
+            except Exception as e:
+                Logger.log("ERROR", f"Camera {self.camera_id}: Failed to capture image: {e}")
+                self.log_error(CameraErrorCodes.CAPTURE_FAILED)
+                self.camera_status = 0
+                return None
         else:
             Logger.log("ERROR", f"Camera {self.camera_id}: Not operational.")
             self.log_error(CameraErrorCodes.CAMERA_NOT_OPERATIONAL)
-        return frame
+        
 
     @property
     def current_frame(self):
@@ -201,17 +212,6 @@ class Camera:
     def set_exposure(self):
         if hasattr(self, "cap") and self.cap.isOpened():
             self.cap.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
-
-    def is_blinded_by_sun(self, image):
-        """gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        _, thresholded = cv2.threshold(gray, 250, 255, cv2.THRESH_BINARY)
-        # Calculate the percentage of bright pixels
-        bright_pixels = cv2.countNonZero(thresholded)
-        total_pixels = image.shape[0] * image.shape[1]
-        bright_ratio = bright_pixels / total_pixels
-        if bright_ratio > 0.5:
-            return True"""
-        return False
 
     def save_image(self, target_frame):
         frame = target_frame.frame
@@ -255,9 +255,14 @@ class Camera:
 class CameraManager:
 
     def __init__(self, camera_ids, config_path="configuration/camera_configuration.yml"):
-        self.cameras = {
-            camera_id: Camera(camera_id, config_path=config_path) for camera_id in camera_ids
-        }
+        self.cameras = {}
+        for camera_id in camera_ids:
+            cam_obj = Camera(camera_id, config_path=config_path)
+            if cam_obj is not None:
+                self.cameras[camera_id] = cam_obj
+                print(f"Camera {camera_id} added to the camera manager.")
+                print(f"Camera {camera_id} operational status: {cam_obj.camera_status}")
+
         number_of_cameras = len(self.cameras)
         self.camera_frames = []
         self.stop_event = False 
@@ -308,25 +313,46 @@ class CameraManager:
         """
         return self.cameras.get(camera_id)
 
-    def run_live(self, save_frequency=10):
+    def run_live(self, save_frequency= 10):
         """
         Run the camera manager to capture frames from all cameras.
         """
+        start_time = time.time()
+        
         
         while not self.stop_event:
-            feed = [] 
+            frame_list = []
             for camera_id, camera in self.cameras.items():
-                feed.append(camera.capture_frame())
-            for ind,fr in enumerate(feed):
-                cv2.imshow(f"camera {ind}",fr)
+                if camera.camera_status:
+                    resulting_frame = camera.capture_frame()
+                    if resulting_frame == None:
+                        continue
+                    cv2.imshow(f"Camera {camera.camera_id}",resulting_frame.frame)
+                    frame_list.append(resulting_frame)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 self.stop_event = True
-        
+
+
+            if (time.time() - start_time) > save_frequency:
+                start_time = time.time()
+                for fr in frame_list:
+                    self.save_image(fr, f"data/camera_{fr.camera_id}/{fr.timestamp}.png")
+
+                    
             # if self.new_landmarked_data:
             #     # update the display of the landmarked frame from its specific path 
             #     pass
-    
+        
+        for camera_id, camera in self.cameras.items():
+            camera.cap.release()
+
+        cv2.destroyAllWindows()
+
+
+    def save_image(self, frame_obj, img_path):
+        cv2.imwrite(img_path, frame_obj.frame)
+        Logger.log("INFO", f"Camera {frame_obj.camera_id}: Image saved at {img_path}")
    
     def stop_live(self):
         self.stop_event = True
@@ -381,3 +407,7 @@ class CameraManager:
         cv2.destroyAllWindows()
 
 
+if __name__ == "__main__":
+    
+    cm = CameraManager([0,2])
+    cm.run_live()

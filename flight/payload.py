@@ -155,7 +155,7 @@ class Payload:
 
     def launch_camera(self):
         Logger.log("INFO", "Launching camera manager...")
-        camera_thread = threading.Thread(target=self._camera_manager.run_live, args=(10,))
+        camera_thread = threading.Thread(target=self._camera_manager.run_live)
         camera_thread.start()
         self._threads.append(camera_thread)
 
