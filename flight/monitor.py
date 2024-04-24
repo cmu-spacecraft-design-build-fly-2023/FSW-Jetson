@@ -27,7 +27,7 @@ Usage:
 Note:
     Ensure that the `jtop` daemon is running on Jetson device (run `sudo jtop` if not already started) to enable access to the system metrics.
 
-Author(s): Eddie
+Author(s): Eddie, Sachit
 Date: [Creation or Last Update Date]
 """
 from jtop import jtop
