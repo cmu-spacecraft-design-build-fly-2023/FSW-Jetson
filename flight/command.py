@@ -12,21 +12,23 @@ import threading
 import time
 
 
+
 # TODO use logger on DEBUG instead of print statements
 class Task:
-    def __init__(self, task_id, function, payload=None, priority=100):
+    def __init__(self, payload, task_id, function, data=None, priority=100):
         self.task_id = task_id
         self.function = function
-        self.payload = payload
+        self.data = data
         self.priority = priority  # Lower numbers indicate higher priority
         self.created_at = time.time()
         self.attempts = 0
+        self.payload = payload
 
     def execute(self):
-        """Execute the task's function with the provided payload, with retry logic."""
+        """Execute the task's function with the provided data, with retry logic."""
         self.attempts += 1
         try:
-            result = self.function(self.payload)
+            result = self.function(self.payload) # for now ignore the data argument :: , self.data
             print(f"Task {self.task_id} completed successfully on attempt {self.attempts}.")
             return result
         except Exception as e:
@@ -125,30 +127,3 @@ class TX_Queue:
             self.queue.queue.clear()
 
 
-if __name__ == "__main__":
-
-    import random
-
-    def print_message(payload):
-        print(payload)
-
-    def throw_random_error(payload):
-        if random.random() < 0.7:
-            raise Exception("Random error occurred!")
-
-    command_queue = CommandQueue()
-
-    task1 = Task(1, print_message, "Hello, World!", 50)
-    task2 = Task(2, print_message, "Goodbye, World!", 10)
-    task3 = Task(3, throw_random_error, "Testing random error", 75)
-
-    command_queue.add_task(task1)
-    command_queue.add_task(task2)
-    command_queue.add_task(task3)
-
-    command_queue.print_all_tasks()
-
-    while not command_queue.is_empty():
-        task = command_queue.get_next_task()
-        task.execute()
-        time.sleep(1)

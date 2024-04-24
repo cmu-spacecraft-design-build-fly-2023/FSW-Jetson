@@ -21,7 +21,7 @@ def add_command(payload, command_id, priority=50):
         raise KeyError(f"Command ID {command_id} not found")
 
     try:
-        task = Task(command_id, task_fct, None, priority=priority)
+        task = Task(payload, command_id, task_fct, None, priority=priority)
         payload.command_queue.add_task(task)
     except Exception as e:
         raise e
@@ -45,7 +45,9 @@ if __name__ == "__main__":
     # ADD COMMANDS PRIOR TO THE QUEUE HERE IF YOU WANT
     # e.g. add_command(payload, DEBUG_HELLO)
     add_command(payload, DEBUG_HELLO)
-
+    
+    add_command(payload, RUN_ML_PIPELINE)
+    add_command(payload, REQUEST_LANDMARKED_IMAGE)
 
     start_time = time.time()
 
@@ -59,13 +61,8 @@ if __name__ == "__main__":
 
             # If you want to send commands later, use the add_command(command_id) function within an if statement with time 
             # e.g. add_command(payload, DEBUG_HELLO)
-            add_command(payload, DEBUG_HELLO)
-
-
-
-
-
-
+            
+            
 
 
             

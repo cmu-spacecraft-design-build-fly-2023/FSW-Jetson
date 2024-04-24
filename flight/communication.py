@@ -10,10 +10,13 @@ Date: [Creation or Last Update Date]
 import time
 import serial
 
+import threading
+
 from command import Task
 
-import flight.message as message
 from flight.message import Message
+
+from flight.logger import Logger
 
 MAX_RETRIES = 3
 TIMEOUT = 500
@@ -28,13 +31,13 @@ class UARTComm:
             self.uart.reset_input_buffer()
             self.uart.reset_output_buffer()
         except serial.SerialException as e:
-            print(
-                f"Error: Failed to initialize UART communication. {e}"
-            )  # TODO logger instead of print
+            Logger.log("Error", "Failed to initialize UART communication. {e}")
             raise e  # Temp
 
         self.port = port
         self.baudrate = baudrate
+
+        self._event_stop = threading.Event()
 
     def send_message(self, message) -> bool:
         """
@@ -52,7 +55,7 @@ class UARTComm:
 
         while not done:
 
-            print(f"Sending packet number {current_seq} of {total_packets}")
+            Logger.log("Info", f"Sending packet number {current_seq} of {total_packets}")
             msg = None
             if current_seq == 0:
                 msg = message.create_header()
@@ -60,7 +63,7 @@ class UARTComm:
                 msg = message.create_packet(current_seq)
 
             self.uart.write(msg)
-            print(f"Sent packet number {current_seq} of {total_packets}")
+            Logger.log("Info", f"Sent packet number {current_seq} of {total_packets}")
 
             time_s = 0
             while self.uart.in_waiting < message.PKT_METADATA_SIZE:
@@ -71,9 +74,9 @@ class UARTComm:
                 continue
 
             response = self.uart.read(message.PKT_METADATA_SIZE)
-            print("Received ", response)
+            Logger.log("Info", f"Received response {response}")
             (seq_num, packet_type, _) = Message.parse_packet_meta(response)
-            print("Got Ack for packet number", seq_num)
+            Logger.log("Info", f"Received response {seq_num} {packet_type}")
             if packet_type == message.PKT_TYPE_ACK:
                 current_seq = seq_num + 1
                 if current_seq == total_packets + 1:
@@ -107,7 +110,7 @@ class UARTComm:
         (message_type, num_packets) = Message.parse_header_payload(
             header[packet.PKT_METADATA_SIZE :]
         )
-
+        # TODO do something if not correct message type 
         self.uart.write(Message.create_ack(seq_num))
 
         expected_seq_num = seq_num + 1
@@ -130,9 +133,14 @@ class UARTComm:
             message += packet[packet.PKT_METADATA_SIZE :][:payload_size]
 
             # TODO handle case with no success
+            
+            # TODO find message type       
+            # Create corresponding task 
+            # Put in the queue 
+
         return message
 
-    def run(self, payload_rx_queue, payload_tx_queue):
+    def run(self, payload_rx_queue, payload_tx_queue, period=10):
         """
         Main loop for the UART communication module.
 
@@ -140,9 +148,9 @@ class UARTComm:
             payload_rx_queue (Queue): The queue to receive messages from to be converted to Tasks
             payload_tx_queue (Queue): The queue to send messages to.
         """
-        while True:
+        while not self._event_stop.is_set():
 
-            if not payload_tx_queue.empty():
+            if not payload_tx_queue.is_empty():
                 msg = payload_tx_queue.get()
                 self.send_message(msg)
 
@@ -150,4 +158,22 @@ class UARTComm:
                 msg = self.receive_message()
                 payload_rx_queue.put(msg)
 
-            time.sleep(0.1)
+            time.sleep(period)
+
+        self.uart.close()
+
+
+    def stop(self):
+        """
+        Stops the UART communication module.
+        """
+        self._event_stop.set()
+        #self.uart.close()
+
+
+
+if __name__ == "__main__":
+    uart = UARTComm("/dev/ttyACM0")
+    # uart.run()
+    uart.send_message("Hello")
+    pass
