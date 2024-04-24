@@ -20,6 +20,7 @@ from ultralytics import YOLO
 import os
 import csv
 import cv2
+import time
 from PIL import Image
 from flight import Logger
 
@@ -161,9 +162,12 @@ class LandmarkDetector:
             centroid_xy, centroid_latlons, landmark_class, confidence_scores = [], [], [], []
             try:
                 # Detect landmarks using the YOLO model
-                # results = self.model(frame_obj.frame)
                 img = Image.fromarray(cv2.cvtColor(frame_obj.frame, cv2.COLOR_BGR2RGB))
+                start_time = time.time()
                 results = self.model.predict(img, conf=0.5, imgsz=(1088, 1920), verbose=False)
+                end_time = time.time()
+                inference_time = end_time - start_time
+
                 landmark_list = []
 
                 for result in results:
@@ -198,6 +202,10 @@ class LandmarkDetector:
                 Logger.log(
                     "INFO",
                     f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {len(landmark_list)} landmarks detected.",
+                )
+                Logger.log(
+                    "INFO",
+                    f"Inference completed in {inference_time:.2f} seconds."
                 )
                 
                 # Logging details for each detected landmark

@@ -12,13 +12,15 @@ Author: Eddie
 Date: [Creation or Last Update Date]
 """
 
-from torchvision.models import efficientnet_b0, EfficientNet_B0_Weights
+
 import os
 import yaml
 import cv2
+import time
 import torch
 import torch.nn as nn
 from torchvision import models, transforms
+from torchvision.models import efficientnet_b0, EfficientNet_B0_Weights
 from PIL import Image
 from flight import Logger
 
@@ -109,13 +111,17 @@ class RegionClassifier:
             f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {info_messages['CLASSIFICATION_START']}",
         )
         predicted_region_ids = []
-
+        inference_time = 0
         try:
             img = Image.fromarray(cv2.cvtColor(frame_obj.frame, cv2.COLOR_BGR2RGB))
             img = self.transforms(img).unsqueeze(0).to(self.device)
 
             with torch.no_grad():
+                start_time = time.time()
                 outputs = self.model(img)
+                end_time = time.time()
+                inference_time = end_time - start_time
+
                 probabilities = torch.sigmoid(outputs)
                 predicted = (probabilities > 0.55).float()
                 predicted_indices = predicted.nonzero(as_tuple=True)[1]
@@ -128,5 +134,9 @@ class RegionClassifier:
         Logger.log(
             "INFO",
             f"[Camera {frame_obj.camera_id} frame {frame_obj.frame_id}] {predicted_region_ids} region(s) identified.",
+        )
+        Logger.log(
+            "INFO",
+            f"Inference completed in {inference_time:.2f} seconds."
         )
         return predicted_region_ids

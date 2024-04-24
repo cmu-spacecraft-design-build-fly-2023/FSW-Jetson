@@ -32,7 +32,7 @@ Logger.initialize_log(
 )"""
 
 
-def get_latest_frame(image_dir, start_index=10, end_index=11):
+def get_latest_frame(image_dir, start_index=6, end_index=11):
     frame_objects = {}
     # List all files in the directory and filter out non-png files
     all_files = [f for f in os.listdir(image_dir) if f.endswith(".png")]

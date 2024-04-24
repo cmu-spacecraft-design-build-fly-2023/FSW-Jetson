@@ -1,3 +1,0 @@
-Camera ID: 10
-Timestamp: 2024-04-24 04:50:03.111298
-Frame ID: d5effc090c5f0e94
