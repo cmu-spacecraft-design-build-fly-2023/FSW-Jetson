@@ -32,17 +32,21 @@ Logger.initialize_log(
 )"""
 
 
-
-def get_latest_frame(image_dir):
+def get_latest_frame(image_dir, start_index=10, end_index=11):
     frame_objects = {}
-    # List all files in the directory and filter out non-jpg files
+    # List all files in the directory and filter out non-png files
     all_files = [f for f in os.listdir(image_dir) if f.endswith(".png")]
-    # Optionally sort files if they are not in the desired order
+    # Sort files if they are not in the desired order
     all_files.sort()
-    # Process only the top five images
-    top_files = all_files[:20]
+    
+    # Adjust the end index if it is not set or exceeds the number of available files
+    if end_index is None or end_index > len(all_files):
+        end_index = len(all_files)
 
-    for i, filename in enumerate(top_files):
+    # Process images from start_index to end_index, adjusting for list indexing
+    selected_files = all_files[start_index:end_index]
+
+    for i, filename in enumerate(selected_files, start=start_index):
         image_path = os.path.join(image_dir, filename)
         image = cv2.imread(image_path)
         if image is not None:
@@ -138,4 +142,4 @@ if __name__ == "__main__":
         regions_and_landmarks = pipeline.run_ml_pipeline_on_single(frame_obj)
         if regions_and_landmarks:
             # Assuming you have a Frame object and some regions and landmarks processed
-            draw_landmarks_and_save(frame_obj, regions_and_landmarks, "inference_output")
+            pipeline.visualize_landmarks(frame_obj, regions_and_landmarks, "inference_output")

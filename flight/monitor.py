@@ -80,10 +80,3 @@ class JetsonMetrics:
             "CPU Temperature (°C)": self.get_cpu_temperature(),
             "GPU Temperature (°C)": self.get_gpu_temperature()
         }
-
-# Usage
-if __name__ == '__main__':
-    with JetsonMetrics() as metrics:
-        all_metrics = metrics.get_all_metrics()
-        for key, value in all_metrics.items():
-            print(f"{key}: {value}")
