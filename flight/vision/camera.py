@@ -270,6 +270,8 @@ class CameraManager:
         number_of_cameras = len(self.cameras)
         self.camera_frames = []
         self.stop_event = False 
+        self.inf_flag = True
+        self.ML_image_path = 'data/inference_output/frames_w_landmarks.jpg'
         Logger.log("INFO", f"Camera Manager initialized.")
 
     def get_status(self):
@@ -305,7 +307,14 @@ class CameraManager:
             status_list.append(status == 1)
         return status_list
 
-    def turn_off_cameras(self, camera_ids: List[int]):
+    
+
+    def set_flag(self):
+        self.inf_flag = True
+    def kill_flag(self):
+        self.inf_flag = False
+
+    def turn_off_cameras(self):
         """
         Release cameras of given IDs
         """
@@ -338,6 +347,22 @@ class CameraManager:
                         continue
                     cv2.imshow(f"Camera {camera.camera_id}",resulting_frame.frame)
                     frame_list.append(resulting_frame)
+            # if self.inf_flag:
+            #     img = cv2.imread(self.ML_image_path)
+            #     cv2.imshow(f"ML result ",img)
+            # else:
+            #     cv2.destroyWindow("ML result")
+
+            if self.inf_flag:
+                img = cv2.imread(self.ML_image_path)
+                if img is not None:
+                    cv2.imshow("Landmark detection result", img)
+                else:
+                    Logger.log("WARNING", f"Failed to load image from {self.ML_image_path}")
+            else:
+                # Display an empty black image to 'hide' the window content
+                empty_image = np.zeros((100, 100, 3), dtype=np.uint8)
+                cv2.imshow("Landmark detection result", empty_image)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 self.stop_event = True
@@ -426,5 +451,5 @@ class CameraManager:
 
 if __name__ == "__main__":
     
-    cm = CameraManager([0,2])
+    cm = CameraManager([0])
     cm.run_live()

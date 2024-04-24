@@ -13,9 +13,6 @@ from flight.message_id import *
 from flight.vision.camera import Frame
 
 
-
-
-
 def encode_image_transmission_message(img):
     """
     Encodes an image transmission message.
@@ -30,6 +27,21 @@ def encode_image_transmission_message(img):
     img_bytes = img.tobytes()
     return Message(TRANSMIT_IMAGE, img_bytes)
 
+def encode_diagnostic_data(data):
+    """
+    Encodes a diagnostic data message.
+
+    Args:
+        data (bytes): The diagnostic data to be sent.
+
+    Returns:
+        bytes: The encoded message.
+    """
+
+    data_format = "<bbbb"
+    data = pack(data_format, *data)
+    return Message(TRANSMIT_DIAGNOSTIC_DATA, data)
+
 
 if __name__ == "__main__":
 
@@ -38,4 +50,9 @@ if __name__ == "__main__":
     img = cv2.resize(img, (640, 480))
 
     encoded_msg = encode_image_transmission_message(img)
-    print(encoded_msg)
+
+    data = (0x01, 0x02, 0x03, 0x04)
+    diagnostic_msg = encode_diagnostic_data(data)
+
+
+    

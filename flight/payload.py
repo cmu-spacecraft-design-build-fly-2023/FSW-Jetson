@@ -24,6 +24,8 @@ from flight.vision.camera import CameraManager
 
 from flight.communication.uart import UARTComm
 
+from flight.monitoring import JetsonMetrics
+
 from flight.logger import Logger
 
 
@@ -45,6 +47,7 @@ class Payload:
         self._command_queue = CommandQueue()
         self._tx_queue = TX_Queue()
         # self._communication = UARTComm("/dev/ttyACM0")
+        self._current_task_thread = None
         self._camera_manager = CameraManager([0,2,4,6,8,10])
         self._threads = []
         self._idle_count = 0  # Counter before switching to IDLE state
@@ -180,3 +183,12 @@ class Payload:
         for thread in self._threads:
             thread.join()
         Logger.log("INFO", "All components cleanly shutdown.")
+
+
+    def monitor(self):
+        metrics = None
+        Logger.log("INFO", "Retrieving system metrics...")
+        with JetsonMetrics() as metrics:
+            metrics = metrics.get_all_metrics()
+        Logger.log("INFO",f"RAM Usage (%): {metrics['RAM Usage (%)']} | Disk Storage Usage (%): {metrics['Disk Storage Usage (%)']} | CPU Temperature (°C): {metrics['CPU Temperature (°C)']} | GPU Temperature (°C): {metrics['GPU Temperature (°C)']}")
+        return metrics

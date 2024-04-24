@@ -76,7 +76,11 @@ def request_payload_state(payload):
 
 def request_payload_monitoring_data(payload):
     """Request the monitoring data of the payload."""
-    pass
+    data = payload.monitor()
+    mtg_val = [data["RAM Usage (%)"], data["Disk Storage Usage (%)"], data["CPU Temperature (°C)"], data["GPU Temperature (°C)"]]
+    return enc.encode_diagnostic_data(mtg_val)
+
+
 
 
 def restart_payload(payload):
@@ -134,6 +138,7 @@ def turn_on_cameras(payload):
     """Turn on the cameras."""
     cm = payload.camera_manager
     cm.turn_on_cameras()
+    cm.set_flag()
     
 
 
@@ -190,6 +195,8 @@ def run_ml_pipeline(payload):
         regions_and_landmarks = pipeline.run_ml_pipeline_on_single(latest_frame)
         if regions_and_landmarks is not None:
             pipeline.visualize_landmarks(latest_frame, regions_and_landmarks, "data/inference_output")
+            cm = payload.camera_manager()
+            cm.set_flag()
     #else:
     #    print("No frame available to process.")
 
