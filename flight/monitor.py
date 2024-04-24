@@ -61,12 +61,12 @@ class JetsonMetrics:
     def get_cpu_temperature(self):
         """ Returns the CPU temperature rounded to the nearest integer, if available """
         temps = self.jetson.temperature
-        return int(temps['CPU']['temp']) if 'CPU' in temps and temps['CPU']['online'] else None
+        return int(temps['cpu']['temp']) if 'cpu' in temps and temps['cpu']['online'] else None
 
     def get_gpu_temperature(self):
         """ Returns the GPU temperature rounded to the nearest integer, if available """
         temps = self.jetson.temperature
-        return int(temps['GPU']['temp']) if 'GPU' in temps and temps['GPU']['online'] else None
+        return int(temps['gpu']['temp']) if 'gpu' in temps and temps['gpu']['online'] else None
 
     def close(self):
         """ Closes the jtop connection """
