@@ -93,7 +93,6 @@ def delete_all_logs(payload):
 def capture_and_send_image(payload):
     """Capture and send an image."""
     cm = payload.camera_manager
-    print("latest frame captures and returned ")
     return cm.get_latest_frame()
 
 
@@ -103,6 +102,7 @@ def capture_and_send_image(payload):
 def request_last_image(payload):
     """Request the last image."""
     cm = payload.camera_manager
+    cm.kill_flag()
     return cm.get_latest_images()
     
 
@@ -116,6 +116,7 @@ def turn_on_cameras(payload):
     """Turn on the cameras."""
     cm = payload.camera_manager
     cm.turn_on_cameras()
+    cm.set_flag()
     
 
 
@@ -168,6 +169,8 @@ def run_ml_pipeline(payload):
         regions_and_landmarks = pipeline.run_ml_pipeline_on_single(latest_frame)
         if regions_and_landmarks is not None:
             pipeline.visualize_landmarks(latest_frame, regions_and_landmarks, "data/inference_output")
+            cm = payload.camera_manager()
+            cm.set_flag()
     #else:
     #    print("No frame available to process.")
 
