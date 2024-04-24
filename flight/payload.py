@@ -17,10 +17,12 @@ import time
 import threading
 
 from enum import Enum, unique
-from flight.command import CommandQueue, Task
+from flight.command import CommandQueue, Task, TX_Queue
 import flight.message_id as msg
 from flight.task_map import ID_TASK_MAPPING
 from flight.vision.camera import CameraManager
+
+from flight.communication import UARTComm
 
 from flight.logger import Logger
 
@@ -41,12 +43,14 @@ class Payload:
     def __init__(self):
         self._state = PAYLOAD_STATE.STARTUP
         self._command_queue = CommandQueue()
-        # self._communication = None
+        self._tx_queue = TX_Queue()
+        self._communication = UARTComm("/dev/ttyACM0")
         self._camera_manager = CameraManager([0,2,4,6,8,10])
         self._threads = []
 
         self.current_task_thread = None  # This will hold the current task's thread
         self._idle_count = 0  # Counter before switching to IDLE state
+        
 
     @property
     def state(self):
@@ -55,6 +59,10 @@ class Payload:
     @property
     def command_queue(self):
         return self._command_queue
+    
+    @property
+    def tx_queue(self):
+        return self._tx_queue
 
     @property
     def send_queue(self):
@@ -74,9 +82,7 @@ class Payload:
 
         
         self.launch_camera()
-
-
-        # self.launch_UART_communication()
+        self.launch_UART_communication()
 
         try:
             while True:
@@ -122,10 +128,10 @@ class Payload:
 
     def DEBUG_tasks(self):
         # For debugging purposes
-        task1 = Task(msg.DEBUG_HELLO, ID_TASK_MAPPING[msg.DEBUG_HELLO], None, 50)
-        task2 = Task(msg.DEBUG_RANDOM_ERROR, ID_TASK_MAPPING[msg.DEBUG_RANDOM_ERROR], None, 10)
-        task3 = Task(msg.DEBUG_GOODBYE, ID_TASK_MAPPING[msg.DEBUG_GOODBYE], None, 75)
-        task4 = Task(msg.DEBUG_NUMBER, ID_TASK_MAPPING[msg.DEBUG_NUMBER], 32, 75)
+        task1 = Task(self, msg.DEBUG_HELLO, ID_TASK_MAPPING[msg.DEBUG_HELLO], None, 50)
+        task2 = Task(self, msg.DEBUG_RANDOM_ERROR, ID_TASK_MAPPING[msg.DEBUG_RANDOM_ERROR], None, 10)
+        task3 = Task(self, msg.DEBUG_GOODBYE, ID_TASK_MAPPING[msg.DEBUG_GOODBYE], None, 75)
+        task4 = Task(self, msg.DEBUG_NUMBER, ID_TASK_MAPPING[msg.DEBUG_NUMBER], 32, 75)
 
         self.command_queue.add_task(task1)
         self.command_queue.add_task(task2)
@@ -163,8 +169,10 @@ class Payload:
     def launch_UART_communication(self):
         # Start UART communication state machne on its own thread
         Logger.log("INFO", "Initializing UART communication...")
-        # TODO
-        pass
+        uart_thread = threading.Thread(target=self._communication.run, args=(self.command_queue,self.tx_queue))
+        uart_thread.start()
+        self._threads.append(uart_thread)
+
 
     def cleanup(self):
         for thread in self._threads:

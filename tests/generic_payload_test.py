@@ -21,7 +21,7 @@ def add_command(payload, command_id, priority=50):
         raise KeyError(f"Command ID {command_id} not found")
 
     try:
-        task = Task(command_id, task_fct, None, priority=priority)
+        task = Task(payload, command_id, task_fct, None, priority=priority)
         payload.command_queue.add_task(task)
     except Exception as e:
         raise e
