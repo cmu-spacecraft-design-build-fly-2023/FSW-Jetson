@@ -32,6 +32,8 @@ Initialization:
     Logger is initialized automatically on first use with default settings, but it can be re-configured anytime 
     with `Logger.configure()` method to suit different operational needs such as during different phases of a mission.
 
+Author(s): Eddie
+Date: [Creation or Last Update Date]
 """
 
 import logging

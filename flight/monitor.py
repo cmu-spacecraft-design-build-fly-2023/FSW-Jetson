@@ -1,3 +1,35 @@
+"""
+Jetson Metrics Module
+
+This module provides a class, JetsonMetrics, that facilitates monitoring of various system metrics on NVIDIA Jetson devices. 
+It utilizes the jtop library to access real-time performance data including RAM usage, disk storage, and temperatures for CPU and GPU.
+
+Dependencies:
+    - jtop: Required for accessing Jetson hardware statistics. Install via pip using `pip install jetson-stats`.
+
+Usage:
+    ```python
+    from jetson_metrics import JetsonMetrics
+
+    if __name__ == '__main__':
+        with JetsonMetrics() as metrics:
+            all_metrics = metrics.get_all_metrics()
+            for key, value in all_metrics.items():
+                print(f"{key}: {value}")
+    ```
+
+    This will output:
+    - RAM Usage (%)
+    - Disk Storage Usage (%)
+    - CPU Temperature (°C)
+    - GPU Temperature (°C)
+
+Note:
+    Ensure that the `jtop` daemon is running on Jetson device (run `sudo jtop` if not already started) to enable access to the system metrics.
+
+Author(s): Eddie
+Date: [Creation or Last Update Date]
+"""
 from jtop import jtop
 import os
 
