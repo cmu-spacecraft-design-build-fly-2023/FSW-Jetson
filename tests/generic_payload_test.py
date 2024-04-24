@@ -48,8 +48,8 @@ if __name__ == "__main__":
     # e.g. add_command(payload, DEBUG_HELLO)
     add_command(payload, DEBUG_HELLO)   
     add_command(payload, REQUEST_PAYLOAD_STATE)
-    add_command(payload,CAPTURE_AND_SEND_IMAGE)
-    add_command(payload,REQUEST_LAST_IMAGE)
+    add_command(payload, CAPTURE_AND_SEND_IMAGE)
+    add_command(payload, REQUEST_LAST_IMAGE)
     
     # add_command(payload, RUN_ML_PIPELINE)
     # add_command(payload, REQUEST_LANDMARKED_IMAGE)

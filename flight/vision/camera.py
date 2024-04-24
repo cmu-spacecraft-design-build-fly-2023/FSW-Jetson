@@ -368,7 +368,7 @@ class CameraManager:
             latest_imgs[camer_id] = camera.get_latest_image()
         return latest_imgs
 
-    def get_latest_frame(self):
+    def get_latest_frames(self):
         """
         Get the latest available image frame for each camera.
         Returns:

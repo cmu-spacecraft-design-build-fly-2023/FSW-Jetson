@@ -14,7 +14,6 @@ from flight.vision.camera import Frame
 import os
 import cv2
 import datetime
-from pathlib import Path
 
 
 # TODO - fill in functions
@@ -60,11 +59,8 @@ def request_time(payload):
 
 def request_payload_state(payload):
     """Request the current state of the payload."""
-    cm = payload.camera_manager
-    status = cm.get_status()
-    print(status)
-    return status 
-    
+    return payload.state
+
 
 
 def request_payload_monitoring_data(payload):
@@ -94,7 +90,7 @@ def capture_and_send_image(payload):
     """Capture and send an image."""
     cm = payload.camera_manager
     print("latest frame captures and returned ")
-    return cm.get_latest_frame()
+    return cm.get_latest_frames()
 
 
     
@@ -153,7 +149,11 @@ def disable_camera_x(payload):
 
 def request_camera_status(payload):
     """Request the status of the camera."""
-    pass
+    cm = payload.camera_manager
+    status = cm.get_status()
+    Logger.log("INFO", f"Camera status: {status}")
+    return status 
+    
 
 
 # Inference
