@@ -29,21 +29,29 @@ class JetsonMetrics:
     def get_cpu_temperature(self):
         """ Returns the CPU temperature rounded to the nearest integer, if available """
         temps = self.jetson.temperature
-        return int(temps['cpu']['temp']) if 'cpu' in temps and temps['cpu']['online'] else None
+        return int(temps['CPU']['temp']) if 'CPU' in temps and temps['CPU']['online'] else None
 
     def get_gpu_temperature(self):
         """ Returns the GPU temperature rounded to the nearest integer, if available """
         temps = self.jetson.temperature
-        return int(temps['cpu']['temp']) if 'cpu' in temps and temps['cpu']['online'] else None
+        return int(temps['GPU']['temp']) if 'GPU' in temps and temps['GPU']['online'] else None
 
     def close(self):
         """ Closes the jtop connection """
         self.jetson.close()
 
+    def get_all_metrics(self):
+        """ Returns all relevant metrics in a dictionary """
+        return {
+            "RAM Usage (%)": self.get_ram_usage_percentage(),
+            "Disk Storage Usage (%)": self.get_disk_storage_percentage(),
+            "CPU Temperature (°C)": self.get_cpu_temperature(),
+            "GPU Temperature (°C)": self.get_gpu_temperature()
+        }
+
 # Usage
 if __name__ == '__main__':
     with JetsonMetrics() as metrics:
-        print("RAM Usage (%):", metrics.get_ram_usage_percentage())
-        print("Disk Storage Usage (%):", metrics.get_disk_storage_percentage())
-        print("CPU Temperature (°C):", metrics.get_cpu_temperature())
-        print("GPU Temperature (°C):", metrics.get_gpu_temperature())
+        all_metrics = metrics.get_all_metrics()
+        for key, value in all_metrics.items():
+            print(f"{key}: {value}")
