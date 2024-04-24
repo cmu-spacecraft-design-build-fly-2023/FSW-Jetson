@@ -116,6 +116,13 @@ class TX_Queue:
         with self.lock:
             self.queue.put(msg)
 
+    def get_next(self):
+        with self.lock:
+            if self.queue.empty():
+                return None
+            else:
+                return self.queue.get()
+
     def is_empty(self):
         return self.queue.empty()
 
