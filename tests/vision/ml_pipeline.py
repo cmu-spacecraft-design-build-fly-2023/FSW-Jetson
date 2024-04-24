@@ -40,7 +40,7 @@ def get_latest_frame(image_dir):
     # Optionally sort files if they are not in the desired order
     all_files.sort()
     # Process only the top five images
-    top_files = all_files[:1]
+    top_files = all_files[:20]
 
     for i, filename in enumerate(top_files):
         image_path = os.path.join(image_dir, filename)
@@ -121,7 +121,7 @@ def draw_landmarks_and_save(frame_obj, regions_and_landmarks, save_dir):
 
 
 if __name__ == "__main__":
-    relative_path = "/tests/vision/data/12R"
+    relative_path = "data/inference_input"
     image_dir = os.path.join(os.getcwd(), relative_path.strip("/"))
     processor = FrameProcessor()
     pipeline = MLPipeline()

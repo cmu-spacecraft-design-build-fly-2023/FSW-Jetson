@@ -26,6 +26,6 @@ class DemoFrames:
             return None
 
 # Create an instance of DemoFrames with the specified directory
-relative_path = "/tests/vision/data/12R"
+relative_path = "data/inference_input"
 img_path = os.path.join(os.getcwd(), relative_path.strip("/"))
 demo_frames = DemoFrames(img_path)
